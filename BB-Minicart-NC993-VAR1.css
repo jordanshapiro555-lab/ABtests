@@ -1,0 +1,63 @@
+#bb-complimentary-ship-banner {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  background: #F6F3EC;              /* warm ivory */
+  border: 1px solid #C6A24A;         /* outer gold */
+  padding: 16px 18px;
+  margin-top: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+/* Inner gold frame */
+#bb-complimentary-ship-banner .bb-frame {
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  right: 7px;
+  bottom: 7px;
+  border: 1px solid #C6A24A;
+  pointer-events: none;
+}
+
+/* Icon */
+#bb-complimentary-ship-banner .bb-ic {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #1B2A41;               /* navy */
+  border: 2px solid #C6A24A;         /* gold ring */
+  box-shadow: 0 0 0 2px #E7E0D2;     /* soft outer halo */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  margin-top: 2px;
+}
+
+#bb-complimentary-ship-banner .bb-ic svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+/* Headline */
+#bb-complimentary-ship-banner .bb-ttl {
+  margin: 0;
+  color: #1B2A41;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.15;
+  white-space: nowrap;               /* match reference */
+}
+
+/* Subtext */
+#bb-complimentary-ship-banner .bb-sub {
+  margin: 4px 0 0 0;
+  color: #5B6472;
+  font-size: 12px;
+  line-height: 1.25;
+}
