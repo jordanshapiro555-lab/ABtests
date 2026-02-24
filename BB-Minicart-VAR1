@@ -1,76 +1,99 @@
 (function () {
   var overlaySel = '[data-minicart-component="overlay"]';
-  var msgSel = '.utility-overlay__footer-message';
-  var doneAttr = 'data-complimentary-shipping';
+  var headerSel = '.utility-overlay__header';
+  var titleRowSel = '.utility-overlay__header .flex';
+  var bannerId = 'bb-complimentary-ship-banner';
 
-  function apply(root) {
-    var overlay = (root || document).querySelector(overlaySel);
-    if (!overlay) return;
+  function makeBanner() {
+    var banner = document.createElement('div');
+    banner.id = bannerId;
 
-    var msg = overlay.querySelector(msgSel);
-    if (!msg || msg.getAttribute(doneAttr) === '1') return;
+    // Container styling (no gradients)
+    banner.style.background = '#F5F6F7';     // soft light gray
+    banner.style.border = '1px solid #C6A24A'; // thin gold border
+    banner.style.padding = '12px 14px';
+    banner.style.margin = '10px 0 0 0';
+    banner.style.display = 'flex';
+    banner.style.gap = '10px';
+    banner.style.alignItems = 'flex-start';
 
-    // Clear only the shipping/tax message line area
-    while (msg.firstChild) msg.removeChild(msg.firstChild);
-
-    // Wrapper
-    var wrap = document.createElement('div');
-    wrap.style.display = 'block';
-
-    // Row: icon + "Shipping: Complimentary"
-    var row = document.createElement('div');
-    row.style.display = 'flex';
-    row.style.alignItems = 'flex-start';
-    row.style.gap = '10px';
-
+    // Navy circle icon
     var icon = document.createElement('span');
+    icon.setAttribute('aria-hidden', 'true');
     icon.style.width = '18px';
     icon.style.height = '18px';
     icon.style.borderRadius = '999px';
-    icon.style.background = '#C6A24A'; // gold
+    icon.style.background = '#1B2A41'; // navy
     icon.style.display = 'inline-flex';
     icon.style.alignItems = 'center';
     icon.style.justifyContent = 'center';
     icon.style.marginTop = '2px';
-    icon.setAttribute('aria-hidden', 'true');
-
-    // Tiny inline SVG check (kept very short)
     icon.innerHTML =
       '<svg viewBox="0 0 16 16" width="12" height="12" xmlns="http://www.w3.org/2000/svg">' +
       '<path fill="#fff" d="M6.35 11.2 3.2 8.05l1.06-1.06 2.09 2.09 5.41-5.41 1.06 1.06z"/>' +
       '</svg>';
 
-    var title = document.createElement('div');
-    title.textContent = 'Shipping: Complimentary';
-    title.style.color = '#1B2A41'; // navy
-    title.style.fontWeight = '600';
-    title.style.letterSpacing = '0.01em';
+    // Text block
+    var txt = document.createElement('div');
 
-    row.appendChild(icon);
-    row.appendChild(title);
+    var headline = document.createElement('div');
+    headline.textContent = "You’ve Earned Complimentary Shipping.";
+    headline.style.color = '#1B2A41';
+    headline.style.fontWeight = '700';
+    headline.style.lineHeight = '1.2';
+    // “serif feel” without loading fonts:
+    headline.style.fontFamily =
+      'Georgia, "Times New Roman", Times, serif';
 
-    // Subtext
     var sub = document.createElement('div');
-    sub.textContent = 'Taxes calculated at checkout';
-    sub.style.marginLeft = '28px'; // aligns under title, not icon
+    sub.textContent = "Standard shipping has been applied to your order.";
     sub.style.marginTop = '2px';
-    sub.style.color = '#6B7280'; // gray
+    sub.style.color = '#4B5563'; // gray
     sub.style.fontSize = '0.875em';
     sub.style.lineHeight = '1.25';
 
-    wrap.appendChild(row);
-    wrap.appendChild(sub);
+    txt.appendChild(headline);
+    txt.appendChild(sub);
 
-    msg.appendChild(wrap);
-    msg.setAttribute(doneAttr, '1');
+    banner.appendChild(icon);
+    banner.appendChild(txt);
+
+    return banner;
   }
 
-  // Run once
-  apply(document);
+  function apply() {
+    var overlay = document.querySelector(overlaySel);
+    if (!overlay) return;
 
-  // Re-apply on minicart re-render (very lightweight observer)
+    var header = overlay.querySelector(headerSel);
+    if (!header) return;
+
+    // If already present, do nothing
+    if (header.querySelector('#' + bannerId)) return;
+
+    // Place directly under the header title row
+    var titleRow = overlay.querySelector(titleRowSel);
+    var banner = makeBanner();
+
+    if (titleRow && titleRow.parentNode === header) {
+      // Insert after title row (keeps existing close button row intact)
+      if (titleRow.nextSibling) {
+        header.insertBefore(banner, titleRow.nextSibling);
+      } else {
+        header.appendChild(banner);
+      }
+    } else {
+      // Fallback: prepend inside header
+      header.insertBefore(banner, header.firstChild);
+    }
+  }
+
+  // Run once now
+  apply();
+
+  // Re-apply on re-render
   var obs = new MutationObserver(function () {
-    apply(document);
+    apply();
   });
   obs.observe(document.body, { childList: true, subtree: true });
 })();
