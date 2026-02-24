@@ -2,11 +2,12 @@
   var overlaySel = '[data-minicart-component="overlay"]';
   var totalsSel = '.utility-overlay__footer-totals';
   var totalValueSel = '[data-totals-component="value"]';
+  var msgSel = '.utility-overlay__footer-message';
+
   var moduleId = 'bb-free-ship-progress';
   var THRESHOLD = 200;
 
-  var overlayObserver = null;
-  var scheduled = false;
+  var lastTotal = null; // used to avoid re-writing on every call
 
   function parseMoney(text) {
     if (!text) return 0;
@@ -16,6 +17,19 @@
 
   function formatDollars(amount) {
     return '$' + String(Math.ceil(amount));
+  }
+
+  function getContext() {
+    var overlay = document.querySelector(overlaySel);
+    if (!overlay) return null;
+
+    var totals = overlay.querySelector(totalsSel);
+    var totalEl = overlay.querySelector(totalValueSel);
+    var msgEl = overlay.querySelector(msgSel);
+
+    if (!totals || !totalEl) return null;
+
+    return { overlay: overlay, totals: totals, totalEl: totalEl, msgEl: msgEl };
   }
 
   function buildModule() {
@@ -47,7 +61,7 @@
     return wrap;
   }
 
-  function setState(moduleEl, total) {
+  function setProgressState(moduleEl, total) {
     var labelEl = moduleEl.querySelector('.bb-shipprog__label');
     var statusEl = moduleEl.querySelector('.bb-shipprog__status');
     var fillEl = moduleEl.querySelector('.bb-shipprog__fill');
@@ -55,108 +69,98 @@
     var remaining = THRESHOLD - total;
     var qualified = remaining <= 0;
 
-    while (statusEl.firstChild) statusEl.removeChild(statusEl.firstChild);
+    // Only rebuild status content when state changes
+    var nextState = qualified ? 'qualified' : 'progress';
+    if (moduleEl.getAttribute('data-state') !== nextState) {
+      while (statusEl.firstChild) statusEl.removeChild(statusEl.firstChild);
+
+      if (qualified) {
+        var check = document.createElement('span');
+        check.className = 'bb-shipprog__check';
+        check.setAttribute('aria-hidden', 'true');
+        check.innerHTML =
+          '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">' +
+          '<path fill="#fff" d="M6.35 11.2 3.2 8.05l1.06-1.06 2.09 2.09 5.41-5.41 1.06 1.06z"/>' +
+          '</svg>';
+        statusEl.appendChild(check);
+      }
+
+      moduleEl.setAttribute('data-state', nextState);
+    }
 
     if (qualified) {
-      labelEl.textContent = 'Order Qualified for Complimentary Shipping';
-
-      var check = document.createElement('span');
-      check.className = 'bb-shipprog__check';
-      check.setAttribute('aria-hidden', 'true');
-      check.innerHTML =
-        '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">' +
-        '<path fill="#fff" d="M6.35 11.2 3.2 8.05l1.06-1.06 2.09 2.09 5.41-5.41 1.06 1.06z"/>' +
-        '</svg>';
-
-      statusEl.appendChild(check);
+      if (labelEl.textContent !== 'Order Qualified for Complimentary Shipping') {
+        labelEl.textContent = 'Order Qualified for Complimentary Shipping';
+      }
       fillEl.style.width = '100%';
     } else {
-      labelEl.textContent = formatDollars(remaining) + ' Away From Free Shipping';
+      var label = formatDollars(remaining) + ' Away From Free Shipping';
+      if (labelEl.textContent !== label) labelEl.textContent = label;
+
       var pct = Math.max(0, Math.min(1, total / THRESHOLD));
-      fillEl.style.width = String(Math.round(pct * 100)) + '%';
+      var width = String(Math.round(pct * 100)) + '%';
+      if (fillEl.style.width !== width) fillEl.style.width = width;
     }
   }
 
-  function insertOrUpdate() {
-    var overlay = document.querySelector(overlaySel);
-    if (!overlay) return false;
+  function setFooterMessage(msgEl, total) {
+    if (!msgEl) return;
 
-    var totals = overlay.querySelector(totalsSel);
-    if (!totals) return false;
+    var next = total >= THRESHOLD
+      ? 'Taxes calculated at checkout.'
+      : 'Shipping and taxes calculated at checkout.';
 
-    var totalEl = overlay.querySelector(totalValueSel);
-    if (!totalEl) return false;
+    if (msgEl.textContent.trim() !== next) msgEl.textContent = next;
+  }
 
-    var total = parseMoney(totalEl.textContent);
+  function render() {
+    var ctx = getContext();
+    if (!ctx) return;
 
-    var existing = totals.querySelector('#' + moduleId);
+    var total = parseMoney(ctx.totalEl.textContent);
+
+    // Prevent thrashing: if total hasn’t changed, do nothing.
+    if (lastTotal !== null && Math.abs(total - lastTotal) < 0.001) return;
+    lastTotal = total;
+
+    // Progress module
+    var existing = ctx.totals.querySelector('#' + moduleId);
     if (!existing) {
       existing = buildModule();
-      totals.insertBefore(existing, totals.firstChild);
+      ctx.totals.insertBefore(existing, ctx.totals.firstChild);
     }
+    setProgressState(existing, total);
 
-    setState(existing, total);
-    return true;
+    // Footer message
+    setFooterMessage(ctx.msgEl, total);
   }
 
-  function scheduleUpdate() {
-    if (scheduled) return;
-    scheduled = true;
+  // --- Trigger strategy (no heavy MutationObservers) ---
 
-    // throttle updates to next tick (prevents mutation loops)
-    setTimeout(function () {
-      scheduled = false;
-      insertOrUpdate();
-    }, 50);
-  }
+  // 1) Run once at start
+  render();
 
-  function attachOverlayObserver() {
-    // If we already have an observer, don’t add another
-    if (overlayObserver) return;
+  // 2) On minicart open clicks (cheap + works without jQuery)
+  document.addEventListener('click', function () {
+    // Short, bounded retries to catch async drawer render
+    var tries = 0;
+    var t = setInterval(function () {
+      tries++;
+      render();
+      if (document.querySelector(overlaySel) || tries >= 10) clearInterval(t);
+    }, 120);
+  }, true);
 
-    var overlay = document.querySelector(overlaySel);
-    if (!overlay) return;
-
-    overlayObserver = new MutationObserver(function () {
-      scheduleUpdate();
+  // 3) If jQuery exists, hook into ajaxComplete (best for SFRA minicart updates)
+  if (window.jQuery && typeof window.jQuery === 'function') {
+    window.jQuery(document).ajaxComplete(function () {
+      // render after ajax updates minicart HTML
+      setTimeout(render, 0);
     });
-
-    // Observe only the overlay subtree (tiny compared to whole document)
-    overlayObserver.observe(overlay, { childList: true, subtree: true });
-
-    // Initial paint
-    insertOrUpdate();
   }
 
-  function detachOverlayObserver() {
-    if (!overlayObserver) return;
-    overlayObserver.disconnect();
-    overlayObserver = null;
-  }
-
-  // Lightweight “wait until minicart exists” (short + bounded)
-  function boot(triesLeft) {
-    if (insertOrUpdate()) {
-      attachOverlayObserver();
-      return;
-    }
-    if (triesLeft <= 0) return;
-    setTimeout(function () { boot(triesLeft - 1); }, 200);
-  }
-
-  // Start (tries for ~6 seconds max)
-  boot(30);
-
-  // If the overlay is removed/re-added, reattach safely using a SMALL body observer.
-  // This observer only watches for the overlay node presence changes.
-  var bodyObs = new MutationObserver(function () {
-    var overlayPresent = !!document.querySelector(overlaySel);
-    if (overlayPresent) {
-      attachOverlayObserver();
-      scheduleUpdate();
-    } else {
-      detachOverlayObserver();
-    }
+  // 4) Also re-render on history navigation in SPA-ish cases
+  window.addEventListener('popstate', function () {
+    setTimeout(render, 0);
   });
-  bodyObs.observe(document.body, { childList: true, subtree: true });
 })();
