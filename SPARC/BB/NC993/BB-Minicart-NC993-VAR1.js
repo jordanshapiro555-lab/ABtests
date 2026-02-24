@@ -3,16 +3,33 @@
   var headerSel = '.utility-overlay__header';
   var titleRowSel = '.utility-overlay__header .flex';
   var totalSel = '[data-totals-component="value"]';
+  var msgSel = '.utility-overlay__footer-message';
+
   var bannerId = 'bb-complimentary-ship-banner';
   var THRESHOLD = 200;
 
-  function getTotalValue() {
-    var el = document.querySelector(totalSel);
-    if (!el) return 0;
+  var lastTotal = null;
 
-    var text = el.textContent || '';
-    var numeric = text.replace(/[^0-9.]/g, '');
-    return parseFloat(numeric) || 0;
+  function parseMoney(text) {
+    if (!text) return 0;
+    var n = String(text).replace(/[^0-9.]/g, '');
+    return parseFloat(n) || 0;
+  }
+
+  function getContext() {
+    var overlay = document.querySelector(overlaySel);
+    if (!overlay) return null;
+
+    var totalEl = overlay.querySelector(totalSel);
+    if (!totalEl) return null;
+
+    return {
+      overlay: overlay,
+      header: overlay.querySelector(headerSel),
+      titleRow: overlay.querySelector(titleRowSel),
+      totalEl: totalEl,
+      msgEl: overlay.querySelector(msgSel)
+    };
   }
 
   function buildBanner() {
@@ -50,44 +67,86 @@
     return banner;
   }
 
-  function insertOrRemoveBanner() {
-    var overlay = document.querySelector(overlaySel);
-    if (!overlay) return;
+  function upsertBanner(ctx, total) {
+    if (!ctx.header) return;
 
-    var header = overlay.querySelector(headerSel);
-    if (!header) return;
+    var existing = ctx.header.querySelector('#' + bannerId);
+    var qualified = total >= THRESHOLD;
 
-    var total = getTotalValue();
-    var existing = header.querySelector('#' + bannerId);
+    if (qualified) {
+      if (!existing) {
+        var banner = buildBanner();
 
-    if (total > THRESHOLD) {
-      if (existing) return; // already injected
+        if (ctx.titleRow && ctx.titleRow.parentNode === ctx.header) {
+          ctx.header.insertBefore(banner, ctx.titleRow.nextSibling);
+        } else {
+          ctx.header.appendChild(banner);
+        }
 
-      var titleRow = overlay.querySelector(titleRowSel);
-      var banner = buildBanner();
-
-      if (titleRow && titleRow.parentNode === header) {
-        header.insertBefore(banner, titleRow.nextSibling);
-      } else {
-        header.appendChild(banner);
+        // Match header padding for inset alignment
+        try {
+          var cs = window.getComputedStyle(ctx.header);
+          banner.style.marginLeft = cs.paddingLeft;
+          banner.style.marginRight = cs.paddingRight;
+        } catch (e) {}
       }
-
-      // Match header padding for inset alignment
-      var cs = window.getComputedStyle(header);
-      banner.style.marginLeft = cs.paddingLeft;
-      banner.style.marginRight = cs.paddingRight;
-
     } else {
-      // Remove banner if total drops below threshold
       if (existing) existing.remove();
     }
   }
 
-  insertOrRemoveBanner();
+  function updateFooterMessage(ctx, total) {
+    if (!ctx.msgEl) return;
 
-  var obs = new MutationObserver(function () {
-    insertOrRemoveBanner();
+    var next = total >= THRESHOLD
+      ? 'Taxes calculated at checkout.'
+      : 'Shipping and taxes calculated at checkout.';
+
+    if (ctx.msgEl.textContent.trim() !== next) ctx.msgEl.textContent = next;
+  }
+
+  function render() {
+    var ctx = getContext();
+    if (!ctx) return;
+
+    var total = parseMoney(ctx.totalEl.textContent);
+
+    // Avoid thrashing: only rerender when total changes
+    if (lastTotal !== null && Math.abs(total - lastTotal) < 0.001) return;
+    lastTotal = total;
+
+    upsertBanner(ctx, total);
+    updateFooterMessage(ctx, total);
+  }
+
+  // --- Trigger strategy (live-safe) ---
+
+  // Initial attempt
+  render();
+
+  // On ajax updates (best for SFRA minicart)
+  if (window.jQuery && typeof window.jQuery === 'function') {
+    window.jQuery(document).ajaxComplete(function () {
+      // allow DOM swap to finish
+      setTimeout(render, 0);
+    });
+  }
+
+  // On user interaction that typically opens minicart (bounded retries)
+  document.addEventListener('click', function () {
+    var tries = 0;
+    var t = setInterval(function () {
+      tries++;
+      render();
+      if (document.querySelector(overlaySel) || tries >= 10) clearInterval(t);
+    }, 120);
+  }, true);
+
+  // SPA-ish navigation fallback
+  window.addEventListener('popstate', function () {
+    setTimeout(function () {
+      lastTotal = null; // force refresh after nav
+      render();
+    }, 0);
   });
-
-  obs.observe(document.body, { childList: true, subtree: true });
 })();
