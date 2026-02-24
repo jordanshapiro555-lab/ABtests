@@ -9,15 +9,17 @@
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 /* Inner gold frame */
 #bb-complimentary-ship-banner .bb-frame {
   position: absolute;
-  left: 7px;
-  top: 7px;
-  right: 7px;
-  bottom: 7px;
+  left: 3px;
+  top: 3px;
+  right: 3px;
+  bottom: 3px;
   border: 1px solid #C6A24A;
   pointer-events: none;
 }
@@ -28,8 +30,8 @@
   height: 28px;
   border-radius: 999px;
   background: #1B2A41;               /* navy */
-  border: 2px solid #C6A24A;         /* gold ring */
-  box-shadow: 0 0 0 2px #E7E0D2;     /* soft outer halo */
+  border: 1px solid #F6F3EC;         /* gold ring */
+  box-shadow: 0 0 0 2px #1B2A41;     /* soft outer halo */
   display: inline-flex;
   align-items: center;
   justify-content: center;
