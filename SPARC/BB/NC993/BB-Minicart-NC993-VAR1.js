@@ -2,7 +2,18 @@
   var overlaySel = '[data-minicart-component="overlay"]';
   var headerSel = '.utility-overlay__header';
   var titleRowSel = '.utility-overlay__header .flex';
+  var totalSel = '[data-totals-component="value"]';
   var bannerId = 'bb-complimentary-ship-banner';
+  var THRESHOLD = 200;
+
+  function getTotalValue() {
+    var el = document.querySelector(totalSel);
+    if (!el) return 0;
+
+    var text = el.textContent || '';
+    var numeric = text.replace(/[^0-9.]/g, '');
+    return parseFloat(numeric) || 0;
+  }
 
   function buildBanner() {
     var banner = document.createElement('div');
@@ -24,11 +35,11 @@
 
     var headline = document.createElement('p');
     headline.className = 'bb-ttl';
-    headline.textContent = "You’ve Earned Complimentary Shipping.";
+    headline.textContent = "You’ve Earned Free Shipping!";
 
     var sub = document.createElement('p');
     sub.className = 'bb-sub';
-    sub.textContent = "Standard shipping has been applied to your order.";
+    sub.textContent = "Standard shipping is free with your order.";
 
     textWrap.appendChild(headline);
     textWrap.appendChild(sub);
@@ -39,34 +50,43 @@
     return banner;
   }
 
-  function insertBanner() {
+  function insertOrRemoveBanner() {
     var overlay = document.querySelector(overlaySel);
     if (!overlay) return;
 
     var header = overlay.querySelector(headerSel);
     if (!header) return;
 
-    if (header.querySelector('#' + bannerId)) return;
+    var total = getTotalValue();
+    var existing = header.querySelector('#' + bannerId);
 
-    var titleRow = overlay.querySelector(titleRowSel);
-    var banner = buildBanner();
+    if (total > THRESHOLD) {
+      if (existing) return; // already injected
 
-    if (titleRow && titleRow.parentNode === header) {
-      header.insertBefore(banner, titleRow.nextSibling);
+      var titleRow = overlay.querySelector(titleRowSel);
+      var banner = buildBanner();
+
+      if (titleRow && titleRow.parentNode === header) {
+        header.insertBefore(banner, titleRow.nextSibling);
+      } else {
+        header.appendChild(banner);
+      }
+
+      // Match header padding for inset alignment
+      var cs = window.getComputedStyle(header);
+      banner.style.marginLeft = cs.paddingLeft;
+      banner.style.marginRight = cs.paddingRight;
+
     } else {
-      header.appendChild(banner);
+      // Remove banner if total drops below threshold
+      if (existing) existing.remove();
     }
-
-    // Match header left/right padding for proper inset alignment
-    var cs = window.getComputedStyle(header);
-    banner.style.marginLeft = cs.paddingLeft;
-    banner.style.marginRight = cs.paddingRight;
   }
 
-  insertBanner();
+  insertOrRemoveBanner();
 
   var obs = new MutationObserver(function () {
-    insertBanner();
+    insertOrRemoveBanner();
   });
 
   obs.observe(document.body, { childList: true, subtree: true });
