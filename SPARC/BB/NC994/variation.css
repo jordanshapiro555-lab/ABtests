@@ -126,3 +126,34 @@
   border-right: 9px solid transparent;
   border-bottom: 9px solid #fff; /* panel background */
 }
+
+/* ===== Panel-only fade (no backdrop fade) ===== */
+
+/* Ensure wrapper/backdrop do NOT animate */
+#optly-savedbag-overlay { opacity: 1 !important; }
+#optly-savedbag-overlay .optly-backdrop {
+  opacity: 1 !important;
+  transition: none !important;
+}
+
+/* Panel starts hidden */
+#optly-savedbag-overlay .optly-panel {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 240ms ease, transform 240ms ease;
+  will-change: opacity, transform;
+}
+
+/* Panel fades in when class added */
+#optly-savedbag-overlay .optly-panel.optly-panel-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #optly-savedbag-overlay .optly-panel {
+    transition: none !important;
+    transform: none !important;
+  }
+}
