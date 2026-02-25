@@ -1,0 +1,119 @@
+/* Optimizely — Secondary personalized minicart overlay (separate DOM) */
+
+#optly-savedbag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: none;
+}
+
+#optly-savedbag-overlay.optly-open { display: block; }
+
+#optly-savedbag-overlay .optly-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+}
+
+#optly-savedbag-overlay .optly-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(420px, 92vw);
+  background: #fff;
+  box-shadow: -12px 0 30px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+#optly-savedbag-overlay .optly-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#optly-savedbag-overlay .optly-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+#optly-savedbag-overlay .optly-close {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+#optly-savedbag-overlay .optly-body {
+  padding: 14px 16px;
+  overflow: auto;
+  flex: 1;
+}
+
+#optly-savedbag-overlay .optly-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+#optly-savedbag-overlay .optly-img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  background: #f3f3f3;
+}
+
+#optly-savedbag-overlay .optly-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+}
+
+#optly-savedbag-overlay .optly-meta {
+  font-size: 12px;
+  opacity: 0.85;
+  margin: 0;
+}
+
+#optly-savedbag-overlay .optly-footer {
+  border-top: 1px solid rgba(0,0,0,0.08);
+  padding: 12px 16px;
+}
+
+#optly-savedbag-overlay .optly-actions {
+  display: grid;
+  gap: 10px;
+}
+
+#optly-savedbag-overlay .optly-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 44px;
+  border-radius: 2px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+#optly-savedbag-overlay .optly-btn-primary {
+  background: #111827;
+  color: #fff;
+}
+
+#optly-savedbag-overlay .optly-btn-link {
+  background: transparent;
+  color: #111827;
+  text-decoration: underline;
+  height: auto;
+  padding: 6px 0;
+}
