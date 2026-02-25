@@ -1,4 +1,4 @@
-/* Optimizely — Secondary personalized minicart overlay (separate DOM) */
+/* Optimizely — anchored “Saved Bag” overlay (separate DOM) */
 
 #optly-savedbag-overlay {
   position: fixed;
@@ -12,27 +12,33 @@
 #optly-savedbag-overlay .optly-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.18);
 }
 
-#optly-savedbag-overlay .optly-drawer {
+/* Panel is positioned via JS under the cart icon */
+#optly-savedbag-overlay .optly-panel {
   position: absolute;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: min(420px, 92vw);
+  width: min(440px, calc(100vw - 24px));
   background: #fff;
-  box-shadow: -12px 0 30px rgba(0,0,0,0.18);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+  border: 1px solid rgba(0,0,0,0.08);
+
+  /* Height behavior */
+  height: auto;
+  max-height: 75vh;
+
   display: flex;
   flex-direction: column;
 }
 
+/* Our header */
 #optly-savedbag-overlay .optly-header {
   padding: 14px 16px;
   border-bottom: 1px solid rgba(0,0,0,0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex: 0 0 auto;
 }
 
 #optly-savedbag-overlay .optly-title {
@@ -50,70 +56,73 @@
   padding: 4px 6px;
 }
 
+/* Body holds injected SFRA sections */
 #optly-savedbag-overlay .optly-body {
-  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* critical for scroll math */
+}
+
+/* Never show the fetched SFRA header (prevents duplicate “Your Shopping Bag”) */
+#optly-savedbag-overlay .optly-body .utility-overlay__header {
+  display: none !important;
+}
+
+/* Keep SFRA overlay from behaving like its own fixed/full overlay inside ours */
+#optly-savedbag-overlay .optly-body .utility-overlay,
+#optly-savedbag-overlay .optly-body .header__minicart-overlay {
+  position: static !important;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  box-shadow: none !important;
+}
+
+/* Layout: line-items scrolls, footer always visible */
+#optly-savedbag-overlay .optly-body .utility-overlay__line-items {
   overflow: auto;
-  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-#optly-savedbag-overlay .optly-row {
-  display: grid;
-  grid-template-columns: 64px 1fr;
-  gap: 12px;
-  align-items: start;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-
-#optly-savedbag-overlay .optly-img {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  background: #f3f3f3;
-}
-
-#optly-savedbag-overlay .optly-name {
-  font-size: 13px;
-  font-weight: 600;
-  margin: 0 0 6px 0;
-}
-
-#optly-savedbag-overlay .optly-meta {
-  font-size: 12px;
-  opacity: 0.85;
-  margin: 0;
-}
-
-#optly-savedbag-overlay .optly-footer {
+#optly-savedbag-overlay .optly-body .utility-overlay__footer {
+  flex: 0 0 auto;     /* ensures CTA/footer never gets cut */
   border-top: 1px solid rgba(0,0,0,0.08);
-  padding: 12px 16px;
+  background: #fff;
 }
 
-#optly-savedbag-overlay .optly-actions {
-  display: grid;
-  gap: 10px;
+/* Add caret/arrow pointing to the cart icon */
+#optly-savedbag-overlay .optly-panel {
+  /* needed so the caret can anchor */
+  position: absolute;
 }
 
-#optly-savedbag-overlay .optly-btn {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  height: 44px;
-  border-radius: 2px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 13px;
+/* caret border (shadow/outline) */
+#optly-savedbag-overlay .optly-panel::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: var(--optly-caret-left, 50%);
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid rgba(0,0,0,0.10); /* subtle outline */
 }
 
-#optly-savedbag-overlay .optly-btn-primary {
-  background: #111827;
-  color: #fff;
-}
-
-#optly-savedbag-overlay .optly-btn-link {
-  background: transparent;
-  color: #111827;
-  text-decoration: underline;
-  height: auto;
-  padding: 6px 0;
+/* caret fill */
+#optly-savedbag-overlay .optly-panel::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: var(--optly-caret-left, 50%);
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 9px solid #fff; /* panel background */
 }
