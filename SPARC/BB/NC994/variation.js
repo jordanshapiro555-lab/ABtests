@@ -1,18 +1,18 @@
 (function () {
   // ---------------------------
-  // Selectors from your HTML
+  // From your page HTML
   // ---------------------------
   var headerQtySel = '.header__utility-badge[data-minicart-component="qty"]';
   var triggerSel = '[data-minicart-component="trigger"]';
   var actionUrlAttr = 'data-action-url';
 
-  // Our new overlay ID
+  // New overlay
   var OVERLAY_ID = 'optly-savedbag-overlay';
 
-  // Once per session flag (NOT localStorage)
-  var SESSION_KEY = 'optly_savedbag_shown_v1';
+  // Show once per session
+  var SESSION_KEY = 'optly_savedbag_autoshow_v1';
 
-  // Poll / retry
+  // Timing
   var POLL_MS = 100;
   var TIMEOUT_MS = 8000;
 
@@ -25,7 +25,16 @@
     return isNaN(n) ? 0 : n;
   }
 
-  function ensureOverlay() {
+  function shouldShowOncePerSession() {
+    try { return sessionStorage.getItem(SESSION_KEY) !== '1'; }
+    catch (e) { return true; }
+  }
+
+  function markShownThisSession() {
+    try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+  }
+
+  function ensureOverlayShell() {
     var existing = document.getElementById(OVERLAY_ID);
     if (existing) return existing;
 
@@ -42,20 +51,14 @@
           '<button class="optly-close" type="button" aria-label="Close" data-optly-close>&times;</button>',
         '</div>',
         '<div class="optly-body" id="optly-savedbag-body">',
-          '<p class="optly-meta">Loading your saved items…</p>',
-        '</div>',
-        '<div class="optly-footer">',
-          '<div class="optly-actions">',
-            '<a class="optly-btn optly-btn-primary" id="optly-savedbag-checkout" href="/checkout" role="button">Checkout</a>',
-            '<a class="optly-btn optly-btn-link" id="optly-savedbag-viewbag" href="/cart" title="View Shopping Bag">View Shopping Bag</a>',
-          '</div>',
+          '<div style="padding:14px 16px; font-size:12px; opacity:.85;">Loading your saved bag…</div>',
         '</div>',
       '</div>'
     ].join('');
 
     document.body.appendChild(wrap);
 
-    // Close handlers
+    // Close interactions
     wrap.addEventListener('click', function (e) {
       var close = e.target && (e.target.hasAttribute('data-optly-close') || e.target.closest('[data-optly-close]'));
       if (close) closeOverlay();
@@ -69,7 +72,7 @@
   }
 
   function openOverlay() {
-    var wrap = ensureOverlay();
+    var wrap = ensureOverlayShell();
     var title = qs('#optly-savedbag-title', wrap);
     if (title) title.textContent = 'We Saved Your Bag! (' + getQty() + ')';
     wrap.classList.add('optly-open');
@@ -80,8 +83,7 @@
     if (wrap) wrap.classList.remove('optly-open');
   }
 
-  function populateFromMinicartEndpoint() {
-    // Best-effort: call the same SFRA endpoint as the minicart trigger
+  function populateWithFullMinicartHtml() {
     var trigger = qs(triggerSel);
     if (!trigger) return;
 
@@ -91,105 +93,64 @@
     fetch(url, { credentials: 'include' })
       .then(function (r) { return r.text(); })
       .then(function (html) {
-        var tmp = document.createElement('div');
-        tmp.innerHTML = html;
-
-        // Links
-        var checkout = tmp.querySelector('[data-cart-component="checkout-action"]');
-        var viewBag =
-          tmp.querySelector('a[title="View Shopping Bag"]') ||
-          tmp.querySelector('a[href*="Cart-Show"]') ||
-          tmp.querySelector('a[href*="/cart"]');
-
-        var ourCheckout = qs('#optly-savedbag-checkout');
-        var ourViewBag = qs('#optly-savedbag-viewbag');
-        if (checkout && checkout.getAttribute('href') && ourCheckout) ourCheckout.href = checkout.getAttribute('href');
-        if (viewBag && viewBag.getAttribute('href') && ourViewBag) ourViewBag.href = viewBag.getAttribute('href');
-
-        // Items
-        var itemsRoot = tmp.querySelector('[data-minicart-component="items"]');
-        var cards = itemsRoot ? itemsRoot.querySelectorAll('[data-cart-line-item]') : [];
-        if (!cards || !cards.length) return;
-
-        var wrap = ensureOverlay();
+        var wrap = ensureOverlayShell();
         var body = qs('#optly-savedbag-body', wrap);
         if (!body) return;
 
-        var out = [];
-        Array.prototype.forEach.call(cards, function (card) {
-          var nameEl = card.querySelector('.product-line-item__name');
-          var imgEl = card.querySelector('img.product-line-item__image');
-          var colorEl = card.querySelector('[data-line-item-component="color"] .product-line-item__attribute-value');
+        // Parse server HTML in-memory
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
 
-          // Common BB attributes vary by product; keep it light
-          var sizeEl =
-            card.querySelector('[data-line-item-component="Waist"] .product-line-item__attribute-value') ||
-            card.querySelector('[data-line-item-component="chest"] .product-line-item__attribute-value') ||
-            card.querySelector('[data-line-item-component="Length"] .product-line-item__attribute-value') ||
-            card.querySelector('[data-line-item-component="Inseam"] .product-line-item__attribute-value');
+        /**
+         * CRITICAL: Preserve ALL data-attrs and DOM structure by injecting the
+         * returned overlay content wholesale (NOT re-mapping fields).
+         *
+         * Depending on SFRA implementation, the response may:
+         * - Be the overlay inner HTML, OR
+         * - Contain a node with [data-minicart-component="overlay"]
+         */
+        var overlayNode =
+          tmp.querySelector('[data-minicart-component="overlay"]') ||
+          tmp.querySelector('.header__minicart-overlay') ||
+          tmp;
 
-          var name = nameEl ? (nameEl.textContent || '').trim() : 'Item';
-          var href = nameEl && nameEl.getAttribute('href') ? nameEl.getAttribute('href') : '#';
-          var img = imgEl && imgEl.getAttribute('src') ? imgEl.getAttribute('src') : '';
+        // Inject as-is
+        body.innerHTML = '';
+        // Move nodes (preserves attributes). If your site expects scripts, they likely
+        // already exist globally; we intentionally do NOT execute new scripts.
+        while (overlayNode.firstChild) body.appendChild(overlayNode.firstChild);
 
-          var metaBits = [];
-          if (colorEl && colorEl.textContent) metaBits.push('Color: ' + colorEl.textContent.trim());
-          if (sizeEl && sizeEl.textContent) metaBits.push(sizeEl.textContent.trim());
-
-          out.push(
-            '<div class="optly-row">' +
-              (img ? '<img class="optly-img" src="' + img + '" alt=""/>' : '<div class="optly-img"></div>') +
-              '<div>' +
-                '<p class="optly-name"><a href="' + href + '" style="color:inherit;text-decoration:none;">' + name + '</a></p>' +
-                (metaBits.length ? '<p class="optly-meta">' + metaBits.join(' • ') + '</p>' : '') +
-              '</div>' +
-            '</div>'
-          );
-        });
-
-        body.innerHTML = out.join('');
+        // Optional: if any links/buttons rely on delegated events, they'll still work.
+        // If they rely on one-time binding to the original overlay only, we'd need to
+        // re-trigger that initializer (site-specific).
       })
       .catch(function () {
-        // silent fail
+        // If fetch fails, keep shell visible but do nothing else
       });
   }
 
-  function shouldShowOncePerSession() {
-    try {
-      return sessionStorage.getItem(SESSION_KEY) !== '1';
-    } catch (e) {
-      // If sessionStorage is blocked, fall back to showing once per page load
-      return true;
-    }
-  }
-
-  function markShownThisSession() {
-    try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
-  }
-
-  function initAutoOpen() {
-    // Only show if: not shown this session AND cart has items
+  function initAutoShow() {
+    // Optimizely audience controls who runs this JS.
+    // From your requirement: show on load only once per session.
     if (!shouldShowOncePerSession()) return;
     if (getQty() <= 0) return;
 
     // Mark immediately so it never shows again this session
     markShownThisSession();
 
-    // Create + open overlay
+    // Open + populate
     openOverlay();
-
-    // Fill with actual cart content
-    populateFromMinicartEndpoint();
+    populateWithFullMinicartHtml();
   }
 
-  // Wait for header qty/trigger to exist
+  // Wait until qty badge exists (and trigger exists so we have data-action-url)
   var start = Date.now();
   (function tick() {
-    var qtyReady = qs(headerQtySel);
-    var triggerReady = qs(triggerSel);
+    var qtyEl = qs(headerQtySel);
+    var triggerEl = qs(triggerSel);
 
-    if (qtyReady && triggerReady) {
-      initAutoOpen();
+    if (qtyEl && triggerEl) {
+      initAutoShow();
       return;
     }
 
