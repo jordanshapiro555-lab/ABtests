@@ -1,4 +1,4 @@
-/* Optimizely — Secondary personalized minicart overlay (separate DOM) */
+/* Optimizely — Secondary minicart overlay (separate DOM; SFRA markup preserved) */
 
 #optly-savedbag-overlay {
   position: fixed;
@@ -27,6 +27,7 @@
   flex-direction: column;
 }
 
+/* Our header (mirrors BB style in your screenshot) */
 #optly-savedbag-overlay .optly-header {
   padding: 14px 16px;
   border-bottom: 1px solid rgba(0,0,0,0.08);
@@ -50,70 +51,18 @@
   padding: 4px 6px;
 }
 
+/* Important: Do NOT restyle SFRA internals; just make them scroll */
 #optly-savedbag-overlay .optly-body {
-  padding: 14px 16px;
   overflow: auto;
   flex: 1;
 }
 
-#optly-savedbag-overlay .optly-row {
-  display: grid;
-  grid-template-columns: 64px 1fr;
-  gap: 12px;
-  align-items: start;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-
-#optly-savedbag-overlay .optly-img {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  background: #f3f3f3;
-}
-
-#optly-savedbag-overlay .optly-name {
-  font-size: 13px;
-  font-weight: 600;
-  margin: 0 0 6px 0;
-}
-
-#optly-savedbag-overlay .optly-meta {
-  font-size: 12px;
-  opacity: 0.85;
-  margin: 0;
-}
-
-#optly-savedbag-overlay .optly-footer {
-  border-top: 1px solid rgba(0,0,0,0.08);
-  padding: 12px 16px;
-}
-
-#optly-savedbag-overlay .optly-actions {
-  display: grid;
-  gap: 10px;
-}
-
-#optly-savedbag-overlay .optly-btn {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  height: 44px;
-  border-radius: 2px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-#optly-savedbag-overlay .optly-btn-primary {
-  background: #111827;
-  color: #fff;
-}
-
-#optly-savedbag-overlay .optly-btn-link {
-  background: transparent;
-  color: #111827;
-  text-decoration: underline;
-  height: auto;
-  padding: 6px 0;
+/* Keep the fetched SFRA overlay from adding its own fixed positioning, if any */
+#optly-savedbag-overlay .header__minicart-overlay,
+#optly-savedbag-overlay .utility-overlay {
+  position: static !important;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  box-shadow: none !important;
 }
