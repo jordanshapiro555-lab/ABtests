@@ -3,32 +3,89 @@
   var msgSel = '.utility-overlay__footer-message';
   var totalSel = '[data-totals-component="value"]';
   var doneAttr = 'data-complimentary-shipping';
+  var origAttr = 'data-complimentary-shipping-orig'; // NEW: store original HTML
   var THRESHOLD = 200;
 
-  function getTotalValue() {
-    var el = document.querySelector(totalSel);
-    if (!el) return 0;
+  // Show ONLY when total >= 200 AND made-on-demand item is NOT in cart
+  var MOD_SEL = '[data-line-item-component="made-on-demand-details"]';
 
-    var text = el.textContent || '';
-    var numeric = text.replace(/[^0-9.]/g, '');
-    return parseFloat(numeric) || 0;
+  function parseMoney(text) {
+    if (!text) return 0;
+    var n = String(text).replace(/[^0-9.]/g, '');
+    return parseFloat(n) || 0;
+  }
+
+  function getContext(root) {
+    var overlay = (root || document).querySelector(overlaySel);
+    if (!overlay) return null;
+
+    var totalEl = overlay.querySelector(totalSel);
+    if (!totalEl) return null;
+
+    return {
+      overlay: overlay,
+      totalEl: totalEl,
+      msgEl: overlay.querySelector(msgSel)
+    };
+  }
+
+  function hasMadeOnDemand(ctx) {
+    if (!ctx || !ctx.overlay) return false;
+    try {
+      return !!ctx.overlay.querySelector(MOD_SEL);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function cacheOriginal(msg) {
+    // Save the default message HTML once, before we overwrite it
+    if (msg.getAttribute(origAttr)) return;
+
+    var html = msg.innerHTML || '';
+    // Only cache if there's actually something there (avoids caching blank during early renders)
+    if (html.replace(/\s+/g, '').length) {
+      try {
+        msg.setAttribute(origAttr, encodeURIComponent(html));
+      } catch (e) {}
+    }
+  }
+
+  function restoreOriginal(msg) {
+    var stored = msg.getAttribute(origAttr);
+    if (stored) {
+      try {
+        msg.innerHTML = decodeURIComponent(stored);
+        return;
+      } catch (e) {}
+    }
+    // Fallback if original wasn't captured for some reason
+    msg.textContent = 'Shipping and taxes calculated at checkout.';
   }
 
   function apply(root) {
-    var overlay = (root || document).querySelector(overlaySel);
-    if (!overlay) return;
+    var ctx = getContext(root);
+    if (!ctx || !ctx.msgEl) return;
 
-    var msg = overlay.querySelector(msgSel);
-    if (!msg) return;
+    var msg = ctx.msgEl;
 
-    var total = getTotalValue();
+    // NEW: cache default content as soon as we can
+    cacheOriginal(msg);
+
+    var total = parseMoney(ctx.totalEl.textContent);
+    var mod = hasMadeOnDemand(ctx);
+
+    var shouldShow = total >= THRESHOLD && !mod;
     var alreadyApplied = msg.getAttribute(doneAttr) === '1';
 
-    // If total is below threshold, remove custom message and reset
-    if (total < THRESHOLD) {
+    // If conditions NOT met, remove custom message and restore default
+    if (!shouldShow) {
       if (alreadyApplied) {
         msg.removeAttribute(doneAttr);
-        msg.innerHTML = ''; // or restore default text if needed
+        restoreOriginal(msg); // NEW: restore instead of blanking
+      } else {
+        // Even if we never injected, ensure we don't leave it blank
+        if (!msg.textContent || !msg.textContent.trim()) restoreOriginal(msg);
       }
       return;
     }
