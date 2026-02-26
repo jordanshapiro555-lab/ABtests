@@ -8,7 +8,11 @@
   var bannerId = 'bb-complimentary-ship-banner';
   var THRESHOLD = 200;
 
+  // Made-on-demand marker (as you described)
+  var MOD_SEL = '[data-line-item-component="made-on-demand-details"]';
+
   var lastTotal = null;
+  var lastHasMOD = null;
 
   function parseMoney(text) {
     if (!text) return 0;
@@ -30,6 +34,15 @@
       totalEl: totalEl,
       msgEl: overlay.querySelector(msgSel)
     };
+  }
+
+  function hasMadeOnDemand(ctx) {
+    if (!ctx || !ctx.overlay) return false;
+    try {
+      return !!ctx.overlay.querySelector(MOD_SEL);
+    } catch (e) {
+      return false;
+    }
   }
 
   function buildBanner() {
@@ -67,13 +80,17 @@
     return banner;
   }
 
-  function upsertBanner(ctx, total) {
+  function upsertBanner(ctx, total, hasMOD) {
     if (!ctx.header) return;
 
     var existing = ctx.header.querySelector('#' + bannerId);
-    var qualified = total >= THRESHOLD;
 
-    if (qualified) {
+    // Show ONLY when:
+    // 1) total >= 200
+    // 2) made-on-demand item is NOT in cart
+    var shouldShow = total >= THRESHOLD && !hasMOD;
+
+    if (shouldShow) {
       if (!existing) {
         var banner = buildBanner();
 
@@ -95,10 +112,13 @@
     }
   }
 
-  function updateFooterMessage(ctx, total) {
+  function updateFooterMessage(ctx, total, hasMOD) {
     if (!ctx.msgEl) return;
 
-    var next = total >= THRESHOLD
+    // Keep your existing messaging behavior, but only switch to "Taxes..." when banner should show
+    var shouldShowFreeShipState = total >= THRESHOLD && !hasMOD;
+
+    var next = shouldShowFreeShipState
       ? 'Taxes calculated at checkout.'
       : 'Shipping and taxes calculated at checkout.';
 
@@ -110,13 +130,23 @@
     if (!ctx) return;
 
     var total = parseMoney(ctx.totalEl.textContent);
+    var mod = hasMadeOnDemand(ctx);
 
-    // Avoid thrashing: only rerender when total changes
-    if (lastTotal !== null && Math.abs(total - lastTotal) < 0.001) return;
+    // Avoid thrashing: rerender when total OR MOD presence changes
+    if (
+      lastTotal !== null &&
+      lastHasMOD !== null &&
+      Math.abs(total - lastTotal) < 0.001 &&
+      mod === lastHasMOD
+    ) {
+      return;
+    }
+
     lastTotal = total;
+    lastHasMOD = mod;
 
-    upsertBanner(ctx, total);
-    updateFooterMessage(ctx, total);
+    upsertBanner(ctx, total, mod);
+    updateFooterMessage(ctx, total, mod);
   }
 
   // --- Trigger strategy (live-safe) ---
@@ -133,19 +163,24 @@
   }
 
   // On user interaction that typically opens minicart (bounded retries)
-  document.addEventListener('click', function () {
-    var tries = 0;
-    var t = setInterval(function () {
-      tries++;
-      render();
-      if (document.querySelector(overlaySel) || tries >= 10) clearInterval(t);
-    }, 120);
-  }, true);
+  document.addEventListener(
+    'click',
+    function () {
+      var tries = 0;
+      var t = setInterval(function () {
+        tries++;
+        render();
+        if (document.querySelector(overlaySel) || tries >= 10) clearInterval(t);
+      }, 120);
+    },
+    true
+  );
 
   // SPA-ish navigation fallback
   window.addEventListener('popstate', function () {
     setTimeout(function () {
       lastTotal = null; // force refresh after nav
+      lastHasMOD = null;
       render();
     }, 0);
   });
