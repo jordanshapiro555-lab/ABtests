@@ -7,7 +7,11 @@
   var moduleId = 'bb-free-ship-progress';
   var THRESHOLD = 200;
 
+  // NEW: Made-on-demand marker (as you described)
+  var MOD_SEL = '[data-line-item-component="made-on-demand-details"]';
+
   var lastTotal = null; // used to avoid re-writing on every call
+  var lastHasMOD = null; // NEW: avoid "sticky" behavior when MOD added/removed
 
   function parseMoney(text) {
     if (!text) return 0;
@@ -30,6 +34,16 @@
     if (!totals || !totalEl) return null;
 
     return { overlay: overlay, totals: totals, totalEl: totalEl, msgEl: msgEl };
+  }
+
+  // NEW
+  function hasMadeOnDemand(ctx) {
+    if (!ctx || !ctx.overlay) return false;
+    try {
+      return !!ctx.overlay.querySelector(MOD_SEL);
+    } catch (e) {
+      return false;
+    }
   }
 
   function buildModule() {
@@ -106,9 +120,10 @@
   function setFooterMessage(msgEl, total) {
     if (!msgEl) return;
 
-    var next = total >= THRESHOLD
-      ? 'Taxes calculated at checkout.'
-      : 'Shipping and taxes calculated at checkout.';
+    var next =
+      total >= THRESHOLD
+        ? 'Taxes calculated at checkout.'
+        : 'Shipping and taxes calculated at checkout.';
 
     if (msgEl.textContent.trim() !== next) msgEl.textContent = next;
   }
@@ -118,12 +133,30 @@
     if (!ctx) return;
 
     var total = parseMoney(ctx.totalEl.textContent);
+    var hasMOD = hasMadeOnDemand(ctx);
 
-    // Prevent thrashing: if total hasn’t changed, do nothing.
-    if (lastTotal !== null && Math.abs(total - lastTotal) < 0.001) return;
+    // Prevent thrashing: if neither total nor MOD presence changed, do nothing.
+    if (
+      lastTotal !== null &&
+      lastHasMOD !== null &&
+      Math.abs(total - lastTotal) < 0.001 &&
+      hasMOD === lastHasMOD
+    ) {
+      return;
+    }
     lastTotal = total;
+    lastHasMOD = hasMOD;
 
-    // Progress module
+    // IMPORTANT: "Make no changes if on-demand item is in cart"
+    // - remove our module if it exists
+    // - do not alter footer message
+    if (hasMOD) {
+      var existingMod = ctx.totals.querySelector('#' + moduleId);
+      if (existingMod) existingMod.remove();
+      return;
+    }
+
+    // Progress module (only when NO made-on-demand items are present)
     var existing = ctx.totals.querySelector('#' + moduleId);
     if (!existing) {
       existing = buildModule();
@@ -131,7 +164,7 @@
     }
     setProgressState(existing, total);
 
-    // Footer message
+    // Footer message (only when NO made-on-demand items are present)
     setFooterMessage(ctx.msgEl, total);
   }
 
@@ -141,15 +174,19 @@
   render();
 
   // 2) On minicart open clicks (cheap + works without jQuery)
-  document.addEventListener('click', function () {
-    // Short, bounded retries to catch async drawer render
-    var tries = 0;
-    var t = setInterval(function () {
-      tries++;
-      render();
-      if (document.querySelector(overlaySel) || tries >= 10) clearInterval(t);
-    }, 120);
-  }, true);
+  document.addEventListener(
+    'click',
+    function () {
+      // Short, bounded retries to catch async drawer render
+      var tries = 0;
+      var t = setInterval(function () {
+        tries++;
+        render();
+        if (document.querySelector(overlaySel) || tries >= 10) clearInterval(t);
+      }, 120);
+    },
+    true
+  );
 
   // 3) If jQuery exists, hook into ajaxComplete (best for SFRA minicart updates)
   if (window.jQuery && typeof window.jQuery === 'function') {
