@@ -110,7 +110,7 @@
     icon.style.width = '18px';
     icon.style.height = '18px';
     icon.style.borderRadius = '999px';
-    icon.style.background = '#C6A24A'; // gold
+    icon.style.background = '#229653'; // green
     icon.style.display = 'inline-flex';
     icon.style.alignItems = 'center';
     icon.style.justifyContent = 'center';
