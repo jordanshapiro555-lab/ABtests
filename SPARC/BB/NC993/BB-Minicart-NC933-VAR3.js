@@ -128,21 +128,22 @@
     if (msgEl.textContent.trim() !== next) msgEl.textContent = next;
   }
 
-  function render() {
+  function render(force) {
     var ctx = getContext();
-    if (!ctx) return;
+    if (!ctx) return false;
 
     var total = parseMoney(ctx.totalEl.textContent);
     var hasMOD = hasMadeOnDemand(ctx);
 
     // Prevent thrashing: if neither total nor MOD presence changed, do nothing.
     if (
+      !force &&
       lastTotal !== null &&
       lastHasMOD !== null &&
       Math.abs(total - lastTotal) < 0.001 &&
       hasMOD === lastHasMOD
     ) {
-      return;
+      return true;
     }
     lastTotal = total;
     lastHasMOD = hasMOD;
@@ -153,7 +154,7 @@
     if (hasMOD) {
       var existingMod = ctx.totals.querySelector('#' + moduleId);
       if (existingMod) existingMod.remove();
-      return;
+      return true;
     }
 
     // Progress module (only when NO made-on-demand items are present)
@@ -166,23 +167,141 @@
 
     // Footer message (only when NO made-on-demand items are present)
     setFooterMessage(ctx.msgEl, total);
+    return true;
   }
 
-  // --- Trigger strategy (no heavy MutationObservers) ---
+  // ---------------------------------------------------------------------------
+  // Persistence / anti-flicker logic (same approach as the banner fix):
+  // SFRA re-renders parts of the minicart and can wipe injected nodes.
+  // We re-render multiple times shortly after meaningful changes and
+  // re-bind observers when key nodes (total/totals) are replaced.
+  // ---------------------------------------------------------------------------
+
+  var scheduled = false;
+  var stabilizeTimer = null;
+
+  function stabilizeRenders() {
+    render(true);
+    setTimeout(function () { render(true); }, 50);
+    setTimeout(function () { render(true); }, 150);
+    setTimeout(function () { render(true); }, 300);
+    setTimeout(function () { render(true); }, 600);
+  }
+
+  function scheduleStabilize() {
+    if (scheduled) return;
+    scheduled = true;
+
+    setTimeout(function () {
+      scheduled = false;
+      stabilizeRenders();
+    }, 0);
+
+    if (stabilizeTimer) clearTimeout(stabilizeTimer);
+    stabilizeTimer = setTimeout(function () {
+      stabilizeTimer = null;
+    }, 800);
+  }
+
+  var overlayObs = null;
+  var totalsObs = null;
+  var totalObs = null;
+
+  var lastObservedTotals = null;
+  var lastObservedTotalEl = null;
+
+  function bindTotalsObserver(totalsEl) {
+    if (!totalsEl || totalsEl === lastObservedTotals) return;
+    lastObservedTotals = totalsEl;
+
+    try { if (totalsObs) totalsObs.disconnect(); } catch (e) {}
+    totalsObs = null;
+
+    try {
+      totalsObs = new MutationObserver(function () {
+        scheduleStabilize();
+      });
+      totalsObs.observe(totalsEl, { childList: true, subtree: true });
+    } catch (e) {
+      totalsObs = null;
+    }
+  }
+
+  function bindTotalObserver(totalEl) {
+    if (!totalEl || totalEl === lastObservedTotalEl) return;
+    lastObservedTotalEl = totalEl;
+
+    try { if (totalObs) totalObs.disconnect(); } catch (e) {}
+    totalObs = null;
+
+    try {
+      totalObs = new MutationObserver(function () {
+        scheduleStabilize();
+      });
+      totalObs.observe(totalEl, { characterData: true, childList: true, subtree: true });
+    } catch (e) {
+      totalObs = null;
+    }
+  }
+
+  function startObservers() {
+    var overlay = document.querySelector(overlaySel);
+    if (!overlay) return;
+
+    if (!overlayObs) {
+      try {
+        overlayObs = new MutationObserver(function () {
+          // Any overlay churn or open-state change => stabilize.
+          scheduleStabilize();
+
+          // Rebind if SFRA swapped out these nodes.
+          var ctx = getContext();
+          if (ctx) {
+            bindTotalsObserver(ctx.totals);
+            bindTotalObserver(ctx.totalEl);
+          }
+        });
+
+        overlayObs.observe(overlay, {
+          subtree: true,
+          childList: true,
+          attributes: true,
+          attributeFilter: ['class', 'style', 'aria-hidden', 'data-focustrap-enabled']
+        });
+      } catch (e) {
+        overlayObs = null;
+      }
+    }
+
+    var ctx = getContext();
+    if (ctx) {
+      bindTotalsObserver(ctx.totals);
+      bindTotalObserver(ctx.totalEl);
+    }
+  }
+
+  // --- Trigger strategy (keep original behavior, add persistence) ---
 
   // 1) Run once at start
-  render();
+  render(true);
+  startObservers();
 
   // 2) On minicart open clicks (cheap + works without jQuery)
   document.addEventListener(
     'click',
     function () {
+      startObservers();
+      scheduleStabilize();
+
       // Short, bounded retries to catch async drawer render
       var tries = 0;
       var t = setInterval(function () {
         tries++;
-        render();
-        if (document.querySelector(overlaySel) || tries >= 10) clearInterval(t);
+        startObservers();
+        render(true);
+
+        // Stop when we actually have context (overlay always exists on your site)
+        if (getContext() || tries >= 12) clearInterval(t);
       }, 120);
     },
     true
@@ -191,13 +310,28 @@
   // 3) If jQuery exists, hook into ajaxComplete (best for SFRA minicart updates)
   if (window.jQuery && typeof window.jQuery === 'function') {
     window.jQuery(document).ajaxComplete(function () {
-      // render after ajax updates minicart HTML
-      setTimeout(render, 0);
+      setTimeout(function () {
+        startObservers();
+        scheduleStabilize();
+      }, 0);
     });
   }
 
   // 4) Also re-render on history navigation in SPA-ish cases
   window.addEventListener('popstate', function () {
-    setTimeout(render, 0);
+    setTimeout(function () {
+      lastTotal = null;
+      lastHasMOD = null;
+      lastObservedTotals = null;
+      lastObservedTotalEl = null;
+      try { if (totalsObs) totalsObs.disconnect(); } catch (e) {}
+      try { if (totalObs) totalsObs.disconnect(); } catch (e) {}
+      totalsObs = null;
+      totalObs = null;
+
+      render(true);
+      startObservers();
+      scheduleStabilize();
+    }, 0);
   });
 })();
