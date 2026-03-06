@@ -4,10 +4,12 @@
   var actionUrlAttr = 'data-action-url';
 
   var OVERLAY_ID = 'optly-savedbag-overlay';
-  var SESSION_KEY = 'optly_savedbag_autoshow_v7';
+  var SESSION_KEY = 'optly_savedbag_autoshow_v8';
 
   var REMOVE_ENDPOINT =
     'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-RemoveProductLineItem';
+
+  var DISMISS_POPUP_SEL = '#closeIconContainer[data-testid="closeIcon"]';
 
   function qs(s, r) { return (r || document).querySelector(s); }
   function qsa(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
@@ -35,6 +37,28 @@
 
   function markShown() {
     try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+  }
+
+  function isVisible(el) {
+    if (!el) return false;
+    var rect = el.getBoundingClientRect();
+    var style = window.getComputedStyle(el);
+    return (
+      style.display !== 'none' &&
+      style.visibility !== 'hidden' &&
+      style.opacity !== '0' &&
+      rect.width > 0 &&
+      rect.height > 0 &&
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.left < (window.innerWidth || document.documentElement.clientWidth)
+    );
+  }
+
+  function shouldDelayForDismissButton() {
+    var btn = qs(DISMISS_POPUP_SEL);
+    return isVisible(btn);
   }
 
   function ensureShell() {
@@ -329,12 +353,31 @@
       .catch(function () {});
   }
 
-  function init() {
+  function showWhenAllowed() {
     if (shown()) return;
     if (getQty() <= 0) return;
 
+    if (shouldDelayForDismissButton()) {
+      var dismissBtn = qs(DISMISS_POPUP_SEL);
+      if (!dismissBtn || dismissBtn.__optlySavedBagBound) return;
+
+      dismissBtn.__optlySavedBagBound = true;
+      dismissBtn.addEventListener('click', function () {
+        if (shown()) return;
+        if (getQty() <= 0) return;
+        markShown();
+        populateAndShow();
+      }, { once: true });
+
+      return;
+    }
+
     markShown();
     populateAndShow();
+  }
+
+  function init() {
+    showWhenAllowed();
 
     var t;
     window.addEventListener('resize', function () {
