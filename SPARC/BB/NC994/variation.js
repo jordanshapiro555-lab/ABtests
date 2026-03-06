@@ -18,6 +18,16 @@
     return isNaN(n) ? 0 : n;
   }
 
+  function getSavedBagItemCount(root) {
+    return qsa('.utility-overlay__line-item.product-line-item.product-line-item--minicart', root).length;
+  }
+
+  function updateSavedBagTitle(root) {
+    var title = qs('#optly-savedbag-title');
+    if (!title) return;
+    title.textContent = 'We Saved Your Bag! (' + getSavedBagItemCount(root || document) + ')';
+  }
+
   function shown() {
     try { return sessionStorage.getItem(SESSION_KEY) === '1'; }
     catch (e) { return false; }
@@ -47,7 +57,7 @@
                 '<path d="M8.4 13.8 5.4 10.8l1.1-1.1 1.9 1.9 5-5 1.1 1.1z" fill="#fff"></path>',
               '</svg>',
             '</span>',
-            '<p class="optly-title" id="optly-savedbag-title">Added to Bag</p>',
+            '<p class="optly-title" id="optly-savedbag-title">We Saved Your Bag! (0)</p>',
           '</div>',
           '<button class="optly-close" type="button" aria-label="Close" data-optly-close>&times;</button>',
         '</div>',
@@ -165,12 +175,10 @@
   }
 
   function customizeInjectedMarkup(body) {
-    // 1) Remove quantity row
     qsa('.product-line-item__qty-pricing .product-line-item__quantity', body).forEach(function (el) {
       el.remove();
     });
 
-    // Also remove any standalone qty labels if structure differs
     qsa('.line-item-pricing-info', body).forEach(function (el) {
       var txt = (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
       if (txt.indexOf('qty:') === 0) {
@@ -179,34 +187,29 @@
       }
     });
 
-    // 2) Remove PayPal button/module
     qsa('.minicart-paypal-button, .checkout-express__button, .paypal-content, .paypal-cart-button, .js_paypal_button_on_cart_page, .button--paypal', body).forEach(function (el) {
       el.remove();
     });
 
-    // 3) Remove Apple Pay too if present inside CTA area
     qsa('[data-cart-component="disable-express-payments"], isapplepay, #apple-pay-button', body).forEach(function (el) {
       el.remove();
     });
 
-    // 4) Remove hyperlinks user doesn't want
     qsa('.minicart__continue, a[title="View Shopping Bag"], .utility-overlay__footer-actions .link.link--primary.link--underline', body).forEach(function (el) {
       el.remove();
     });
 
-    // 5) Convert CTA labels/order to match requested screenshot
     var checkoutBtn = qs('[data-cart-component="checkout-action"], .checkout-btn', body);
     if (checkoutBtn) {
       checkoutBtn.textContent = 'VIEW BAG';
       checkoutBtn.classList.add('optly-view-bag-btn');
-      // Route VIEW BAG to cart page if a cart URL exists
+
       var cartLink = qs('a[href*="Cart-Show"], a[href*="/cart"]', body);
       if (cartLink && cartLink.href && checkoutBtn.tagName.toLowerCase() === 'a') {
         checkoutBtn.href = cartLink.href;
       }
     }
 
-    // Add CHECKOUT NOW button if missing
     var footerActions = qs('.utility-overlay__footer-actions', body);
     if (footerActions) {
       var existingCheckoutNow = qs('.optly-checkout-now-btn', footerActions);
@@ -266,6 +269,7 @@
         while (overlayNode.firstChild) body.appendChild(overlayNode.firstChild);
 
         customizeInjectedMarkup(body);
+        updateSavedBagTitle(body);
 
         requestAnimationFrame(function () {
           position(panel);
