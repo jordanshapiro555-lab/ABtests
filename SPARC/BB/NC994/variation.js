@@ -4,7 +4,7 @@
   var actionUrlAttr = 'data-action-url';
 
   var OVERLAY_ID = 'optly-savedbag-overlay';
-  var SESSION_KEY = 'optly_savedbag_autoshow_v6';
+  var SESSION_KEY = 'optly_savedbag_autoshow_v7';
 
   var REMOVE_ENDPOINT =
     'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-RemoveProductLineItem';
@@ -225,21 +225,60 @@
     }
   }
 
-  function openOverlay() {
+  function showLoadedOverlay() {
     var wrap = ensureShell();
     var panel = qs('.optly-panel', wrap);
+    if (!panel) return;
 
     wrap.classList.add('optly-open');
 
     requestAnimationFrame(function () {
       position(panel);
+      clampScroll(panel);
       requestAnimationFrame(function () {
-        if (panel) panel.classList.add('optly-panel-in');
+        panel.classList.add('optly-panel-in');
       });
     });
   }
 
-  function populate() {
+  function populateAndShow() {
+    var trigger = qs(triggerSel);
+    if (!trigger) return;
+
+    var url = trigger.getAttribute(actionUrlAttr);
+    if (!url) return;
+
+    fetch(url, { credentials: 'include' })
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        var wrap = ensureShell();
+        var panel = qs('.optly-panel', wrap);
+        var body = qs('#optly-savedbag-body', wrap);
+        if (!panel || !body) return;
+
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+
+        var overlayNode =
+          tmp.querySelector('[data-minicart-component="overlay"]') ||
+          tmp.querySelector('.header__minicart-overlay') ||
+          tmp;
+
+        removeScripts(overlayNode);
+        stripDupHeader(overlayNode);
+
+        body.innerHTML = '';
+        while (overlayNode.firstChild) body.appendChild(overlayNode.firstChild);
+
+        customizeInjectedMarkup(body);
+        updateSavedBagTitle(body);
+
+        showLoadedOverlay();
+      })
+      .catch(function () {});
+  }
+
+  function populateOnly() {
     var trigger = qs(triggerSel);
     if (!trigger) return;
 
@@ -286,7 +325,7 @@
       '&context=minicart&qty=1';
 
     fetch(u, { credentials: 'include' })
-      .then(function () { populate(); })
+      .then(function () { populateOnly(); })
       .catch(function () {});
   }
 
@@ -295,8 +334,7 @@
     if (getQty() <= 0) return;
 
     markShown();
-    openOverlay();
-    populate();
+    populateAndShow();
 
     var t;
     window.addEventListener('resize', function () {
