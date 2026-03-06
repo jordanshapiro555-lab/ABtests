@@ -4,7 +4,7 @@
   position: fixed;
   inset: 0;
   z-index: 2147483000;
-  display: none;
+  display: nonee;
 }
 
 #optly-savedbag-overlay.optly-open { display: block; }
@@ -157,3 +157,5 @@
     transform: none !important;
   }
 }
+
+#optly-savedbag-overlay .button--paypal[aria-hidden="true"] { display: none !important; }
