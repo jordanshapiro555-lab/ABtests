@@ -4,10 +4,7 @@
   var actionUrlAttr = 'data-action-url';
 
   var OVERLAY_ID = 'optly-savedbag-overlay';
-  var SESSION_KEY = 'optly_savedbag_autoshow_v8';
-
-  var REMOVE_ENDPOINT =
-    'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-RemoveProductLineItem';
+  var SESSION_KEY = 'optly_savedbag_autoshow_v9';
 
   var DISMISS_POPUP_SEL = '#closeIconContainer[data-testid="closeIcon"]';
 
@@ -57,8 +54,7 @@
   }
 
   function shouldDelayForDismissButton() {
-    var btn = qs(DISMISS_POPUP_SEL);
-    return isVisible(btn);
+    return isVisible(qs(DISMISS_POPUP_SEL));
   }
 
   function ensureShell() {
@@ -100,23 +96,6 @@
       if (t.closest('[data-optly-close], .minicart__continue, [data-toggle-close]')) {
         e.preventDefault();
         closeOverlay();
-        return;
-      }
-
-      var removeBtn = t.closest('[data-line-item-component="remove-action"]');
-      if (removeBtn) {
-        e.preventDefault();
-
-        var lineItem = removeBtn.closest('[data-cart-line-item][data-pid]');
-        if (!lineItem) return;
-
-        var pid = lineItem.getAttribute('data-pid') || '';
-        var uuid = lineItem.getAttribute('data-cart-line-item') || '';
-        if (!pid || !uuid) return;
-
-        if (!window.confirm('Remove this item from your bag?')) return;
-
-        removeLineItem(pid, uuid);
       }
     }, true);
 
@@ -199,6 +178,16 @@
   }
 
   function customizeInjectedMarkup(body) {
+    qsa('.product-line-item__actions', body).forEach(function (el) {
+      el.remove();
+    });
+
+    qsa('[data-line-item-component="remove-action"], [data-line-item-component="remove-confirm"]', body)
+      .forEach(function (el) {
+        var container = el.closest('.product-line-item__action') || el;
+        if (container && container.parentNode) container.remove();
+      });
+
     qsa('.product-line-item__qty-pricing .product-line-item__quantity', body).forEach(function (el) {
       el.remove();
     });
@@ -211,39 +200,36 @@
       }
     });
 
-    qsa('.minicart-paypal-button, .checkout-express__button, .paypal-content, .paypal-cart-button, .js_paypal_button_on_cart_page, .button--paypal', body).forEach(function (el) {
-      el.remove();
-    });
+    qsa('.minicart-paypal-button, .checkout-express__button, .paypal-content, .paypal-cart-button, .js_paypal_button_on_cart_page, .button--paypal', body)
+      .forEach(function (el) { el.remove(); });
 
-    qsa('[data-cart-component="disable-express-payments"], isapplepay, #apple-pay-button', body).forEach(function (el) {
-      el.remove();
-    });
+    qsa('[data-cart-component="disable-express-payments"], isapplepay, #apple-pay-button', body)
+      .forEach(function (el) { el.remove(); });
 
-    qsa('.minicart__continue, a[title="View Shopping Bag"], .utility-overlay__footer-actions .link.link--primary.link--underline', body).forEach(function (el) {
-      el.remove();
-    });
+    qsa('.minicart__continue, a[title="View Shopping Bag"], .utility-overlay__footer-actions .link.link--primary.link--underline', body)
+      .forEach(function (el) { el.remove(); });
 
-    var checkoutBtn = qs('[data-cart-component="checkout-action"], .checkout-btn', body);
-    if (checkoutBtn) {
-      checkoutBtn.textContent = 'VIEW BAG';
-      checkoutBtn.classList.add('optly-view-bag-btn');
+var checkoutBtn = qs('[data-cart-component="checkout-action"], .checkout-btn', body);
+var originalCheckoutHref = checkoutBtn && checkoutBtn.tagName.toLowerCase() === 'a'
+  ? checkoutBtn.href
+  : '';
 
-      var cartLink = qs('a[href*="Cart-Show"], a[href*="/cart"]', body);
-      if (cartLink && cartLink.href && checkoutBtn.tagName.toLowerCase() === 'a') {
-        checkoutBtn.href = cartLink.href;
-      }
-    }
+if (checkoutBtn) {
+  checkoutBtn.textContent = 'VIEW BAG';
+  checkoutBtn.classList.add('optly-view-bag-btn');
 
+  if (checkoutBtn.tagName.toLowerCase() === 'a') {
+    checkoutBtn.href = 'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-Show';
+  }
+}
     var footerActions = qs('.utility-overlay__footer-actions', body);
     if (footerActions) {
       var existingCheckoutNow = qs('.optly-checkout-now-btn', footerActions);
       if (!existingCheckoutNow) {
-        var sourceCheckout = qs('[data-cart-component="checkout-action"], .checkout-btn', body);
-        var checkoutHref = sourceCheckout && sourceCheckout.tagName.toLowerCase() === 'a' ? sourceCheckout.href : '';
         var btn = document.createElement('a');
         btn.className = 'button optly-checkout-now-btn';
         btn.textContent = 'CHECKOUT NOW';
-        if (checkoutHref) btn.href = checkoutHref;
+        if (originalCheckoutHref) btn.href = originalCheckoutHref;
         footerActions.appendChild(btn);
       }
     }
@@ -276,9 +262,8 @@
       .then(function (r) { return r.text(); })
       .then(function (html) {
         var wrap = ensureShell();
-        var panel = qs('.optly-panel', wrap);
         var body = qs('#optly-savedbag-body', wrap);
-        if (!panel || !body) return;
+        if (!body) return;
 
         var tmp = document.createElement('div');
         tmp.innerHTML = html;
@@ -299,57 +284,6 @@
 
         showLoadedOverlay();
       })
-      .catch(function () {});
-  }
-
-  function populateOnly() {
-    var trigger = qs(triggerSel);
-    if (!trigger) return;
-
-    var url = trigger.getAttribute(actionUrlAttr);
-    if (!url) return;
-
-    fetch(url, { credentials: 'include' })
-      .then(function (r) { return r.text(); })
-      .then(function (html) {
-        var wrap = ensureShell();
-        var panel = qs('.optly-panel', wrap);
-        var body = qs('#optly-savedbag-body', wrap);
-        if (!panel || !body) return;
-
-        var tmp = document.createElement('div');
-        tmp.innerHTML = html;
-
-        var overlayNode =
-          tmp.querySelector('[data-minicart-component="overlay"]') ||
-          tmp.querySelector('.header__minicart-overlay') ||
-          tmp;
-
-        removeScripts(overlayNode);
-        stripDupHeader(overlayNode);
-
-        body.innerHTML = '';
-        while (overlayNode.firstChild) body.appendChild(overlayNode.firstChild);
-
-        customizeInjectedMarkup(body);
-        updateSavedBagTitle(body);
-
-        requestAnimationFrame(function () {
-          position(panel);
-          clampScroll(panel);
-        });
-      })
-      .catch(function () {});
-  }
-
-  function removeLineItem(pid, uuid) {
-    var u = REMOVE_ENDPOINT +
-      '?pid=' + encodeURIComponent(pid) +
-      '&uuid=' + encodeURIComponent(uuid) +
-      '&context=minicart&qty=1';
-
-    fetch(u, { credentials: 'include' })
-      .then(function () { populateOnly(); })
       .catch(function () {});
   }
 
