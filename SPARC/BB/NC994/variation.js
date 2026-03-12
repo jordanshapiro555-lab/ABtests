@@ -4,9 +4,9 @@
   var actionUrlAttr = 'data-action-url';
 
   var OVERLAY_ID = 'optly-savedbag-overlay';
-  var SESSION_KEY = 'optly_savedbag_autoshow_v9';
-
+  var SESSION_KEY = 'optly_savedbag_autoshow_v11';
   var DISMISS_POPUP_SEL = '#closeIconContainer[data-testid="closeIcon"]';
+  var VIEW_BAG_URL = 'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-Show';
 
   function qs(s, r) { return (r || document).querySelector(s); }
   function qsa(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
@@ -55,6 +55,18 @@
 
   function shouldDelayForDismissButton() {
     return isVisible(qs(DISMISS_POPUP_SEL));
+  }
+
+  function syncOverlayContainer() {
+    var savedBag = document.getElementById(OVERLAY_ID);
+    var overlayContainer = document.getElementById('overlayContainer');
+    if (!overlayContainer) return;
+
+    if (savedBag && savedBag.classList.contains('optly-open')) {
+      overlayContainer.style.display = 'none';
+    } else {
+      overlayContainer.style.display = '';
+    }
   }
 
   function ensureShell() {
@@ -112,6 +124,7 @@
     wrap.classList.remove('optly-open');
     var panel = qs('.optly-panel', wrap);
     if (panel) panel.classList.remove('optly-panel-in');
+    syncOverlayContainer();
   }
 
   function position(panelEl) {
@@ -209,19 +222,20 @@
     qsa('.minicart__continue, a[title="View Shopping Bag"], .utility-overlay__footer-actions .link.link--primary.link--underline', body)
       .forEach(function (el) { el.remove(); });
 
-var checkoutBtn = qs('[data-cart-component="checkout-action"], .checkout-btn', body);
-var originalCheckoutHref = checkoutBtn && checkoutBtn.tagName.toLowerCase() === 'a'
-  ? checkoutBtn.href
-  : '';
+    var checkoutBtn = qs('[data-cart-component="checkout-action"], .checkout-btn', body);
+    var originalCheckoutHref = checkoutBtn && checkoutBtn.tagName.toLowerCase() === 'a'
+      ? checkoutBtn.href
+      : '';
 
-if (checkoutBtn) {
-  checkoutBtn.textContent = 'VIEW BAG';
-  checkoutBtn.classList.add('optly-view-bag-btn');
+    if (checkoutBtn) {
+      checkoutBtn.textContent = 'VIEW BAG';
+      checkoutBtn.classList.add('optly-view-bag-btn');
 
-  if (checkoutBtn.tagName.toLowerCase() === 'a') {
-    checkoutBtn.href = 'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-Show';
-  }
-}
+      if (checkoutBtn.tagName.toLowerCase() === 'a') {
+        checkoutBtn.href = VIEW_BAG_URL;
+      }
+    }
+
     var footerActions = qs('.utility-overlay__footer-actions', body);
     if (footerActions) {
       var existingCheckoutNow = qs('.optly-checkout-now-btn', footerActions);
@@ -241,6 +255,7 @@ if (checkoutBtn) {
     if (!panel) return;
 
     wrap.classList.add('optly-open');
+    syncOverlayContainer();
 
     requestAnimationFrame(function () {
       position(panel);
