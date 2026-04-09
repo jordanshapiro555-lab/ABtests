@@ -288,7 +288,7 @@
     if (footerActions && !qs('.optly-checkout-now-btn', footerActions)) {
       var btn = document.createElement('a');
       btn.className = 'button optly-checkout-now-btn';
-      btn.textContent = 'CHECKOUT NOW';
+      btn.textContent = 'CHECKOUT';
       if (originalCheckoutHref) btn.href = originalCheckoutHref;
       footerActions.appendChild(btn);
     }
