@@ -1,0 +1,28 @@
+@media (max-width: 47.9375rem) {
+	.product-add__wrapper.product-add__wrapper--show {
+ 		padding: .625rem .625rem 8px; 
+	}
+  .product-add__buttons {
+    margin-top: 8px;
+	}
+  .form-control--qty {
+  	max-height: 2.5rem;
+  }
+  .product-attribute__qty {
+   height: 2.5rem; 
+  }
+  .product-add__wrapper .product-add__buttons-row {
+    max-height: 2.5rem;
+  }
+  .product-add__wrapper .product-add__container {
+    height: 2.5rem;
+  }
+  .product-add__container.cart-and-ipay > .flex {
+  height: 2.5rem;
+}
+  .button.button--wishlist {
+   padding-top: .5625rem !important;
+   padding-bottom: .5625rem !important;
+   height: 2.5rem !important;
+  }
+}
