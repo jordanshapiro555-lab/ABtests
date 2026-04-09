@@ -4,11 +4,11 @@
   var actionUrlAttr = 'data-action-url';
 
   var OVERLAY_ID = 'optly-savedbag-overlay';
-  var SESSION_KEY = 'optly_savedbag_autoshow_v16';
-  var DISMISS_POPUP_SEL = '#closeIconContainer[data-testid="closeIcon"]';
+  var SESSION_KEY = 'optly_savedbag_autoshow_v17';
   var VIEW_BAG_URL = 'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-Show';
 
   var ATTENTIVE_SELECTORS = [
+    '#overlayContainer',
     '#contentframe',
     '#content',
     '#fieldCaptureForm',
@@ -20,7 +20,6 @@
   ].join(', ');
 
   var started = false;
-  var dismissBound = false;
   var resizeTimer = null;
   var attentiveWaitTimer = null;
   var attentiveObserver = null;
@@ -57,6 +56,7 @@
 
   function isVisible(el) {
     if (!el) return false;
+
     var style = window.getComputedStyle(el);
     if (
       style.display === 'none' ||
@@ -101,11 +101,6 @@
     var title = qs('#optly-savedbag-title');
     if (!title) return;
     title.textContent = 'We Saved Your Bag! (' + getSavedBagItemCount(root || document) + ')';
-  }
-
-  function shouldDelayForDismissButton() {
-    var btn = qs(DISMISS_POPUP_SEL);
-    return isVisible(btn);
   }
 
   function ensureShell() {
@@ -417,18 +412,7 @@
       return;
     }
 
-    if (lastFetchUrl) {
-      fetchAndShow();
-    } else {
-      fetchAndShow();
-    }
-  }
-
-  function stopAttentiveObserver() {
-    if (attentiveObserver) {
-      attentiveObserver.disconnect();
-      attentiveObserver = null;
-    }
+    fetchAndShow();
   }
 
   function startAttentiveObserver() {
@@ -437,6 +421,12 @@
     attentiveObserver = new MutationObserver(function () {
       if (isAttentiveVisible()) {
         hardHideForAttentive();
+      } else {
+        var wrap = document.getElementById(OVERLAY_ID);
+        if (wrap && wrap.getAttribute('data-optly-hidden-for-attentive') === 'true') {
+          restoreFromAttentive();
+          resumeSavedBag();
+        }
       }
     });
 
@@ -454,7 +444,7 @@
     startAttentiveObserver();
 
     var checks = 0;
-    var maxChecks = 120;
+    var maxChecks = 200;
 
     attentiveWaitTimer = setInterval(function () {
       checks++;
@@ -464,8 +454,13 @@
       } else {
         clearInterval(attentiveWaitTimer);
         attentiveWaitTimer = null;
+
         restoreFromAttentive();
-        resumeSavedBag();
+
+        var wrap = document.getElementById(OVERLAY_ID);
+        if (!wrap || !wrap.classList.contains('optly-open')) {
+          resumeSavedBag();
+        }
         return;
       }
 
@@ -476,38 +471,13 @@
     }, 150);
   }
 
-  function bindDismissIfNeeded() {
-    if (dismissBound) return;
-
-    var dismissBtn = qs(DISMISS_POPUP_SEL);
-    if (!isVisible(dismissBtn)) return;
-
-    dismissBound = true;
-    dismissBtn.addEventListener('click', function () {
-      if (shown()) return;
-      if (getQty() <= 0) return;
-
-      markShown();
-
-      if (enforceMutualExclusion()) {
-        waitForAttentiveThenResume();
-        return;
-      }
-
-      fetchAndShow();
-    }, { once: true });
-  }
-
   function showWhenAllowed() {
     if (shown()) return;
     if (getQty() <= 0) return;
 
-    bindDismissIfNeeded();
-    if (dismissBound) return;
-
     markShown();
 
-    if (enforceMutualExclusion()) {
+    if (isAttentiveVisible()) {
       waitForAttentiveThenResume();
       return;
     }
