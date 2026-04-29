@@ -1,0 +1,107 @@
+@media (max-width: 47.9375rem) {
+  .product-add__wrapper.product-add__wrapper--show {
+    padding: .625rem .625rem 8px;
+  }
+
+  .product-add__buttons {
+    margin-top: 8px;
+  }
+
+  .product-add__wrapper .product-add__buttons-row {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .product-add__wrapper .product-add__buttons-row > div:first-child {
+    flex: 0 0 auto !important;
+  }
+
+  .product-add__wrapper .product-add__container.cart-and-ipay {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 2.5rem !important;
+    overflow: visible !important;
+  }
+
+  .product-add__container.cart-and-ipay > .flex {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: 2.5rem !important;
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+
+  .product-add__button.bb-hide-real-cta {
+    display: none !important;
+  }
+
+  .bb-scroll-size-cta {
+    display: flex !important;
+    box-sizing: border-box !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    flex: 1 1 auto !important;
+    order: 1 !important;
+
+    width: auto !important;
+    min-width: 140px !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+    max-height: 2.5rem !important;
+
+    padding: 0 16px !important;
+    margin: 0 !important;
+
+    position: relative !important;
+    z-index: 20 !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+
+    background-color: #001f49 !important;
+    color: #ffffff !important;
+    border: 1px solid #001f49 !important;
+    border-radius: 3px !important;
+
+    font-family: proxima-nova, Helvetica, Arial, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    text-indent: 0 !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .button.button--wishlist {
+    order: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    flex: 0 0 2.5rem !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .product-attribute__qty {
+    height: 2.5rem !important;
+  }
+
+  .form-control--qty {
+    max-height: 2.5rem !important;
+  }
+}
