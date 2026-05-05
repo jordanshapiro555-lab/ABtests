@@ -115,6 +115,12 @@
 
     transition: none !important;
   }
+  
+  .bb-scroll-size-cta.bb-scroll-size-cta--select-size {
+    background-color: #FFF !important;
+    border-color: #323952 !important;
+    color: #323952 !important;
+  }
 
   .button.button--wishlist {
     order: 2 !important;
