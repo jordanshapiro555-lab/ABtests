@@ -1,8 +1,10 @@
 (function () {
   var POLL_INTERVAL = 100;
-  var REFRESH_INTERVAL = 750;
+  var REFRESH_INTERVAL = 1000;
+
   var HIDE_REAL_CTA_CLASS = 'bb-hide-real-cta';
   var FAKE_CTA_CLASS = 'bb-scroll-size-cta';
+
   var refreshTimer = null;
 
   function getWrapper() {
@@ -19,6 +21,10 @@
 
   function getWishlistButton() {
     return document.querySelector('.product-add__container.cart-and-ipay .button--wishlist');
+  }
+
+  function getFakeCta() {
+    return document.querySelector('.' + FAKE_CTA_CLASS);
   }
 
   function getButtonText(button) {
@@ -59,9 +65,11 @@
     var target = getAttributeTarget();
     if (!target) return;
 
-    target.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
+    var targetY = target.getBoundingClientRect().top + window.pageYOffset - 100;
+
+    window.scrollTo({
+      top: targetY,
+      behavior: 'smooth'
     });
   }
 
@@ -71,50 +79,57 @@
     fakeCta.dataset.bbBound = 'true';
 
     fakeCta.addEventListener('click', function (e) {
+      var realButton = getRealButton();
+
       e.preventDefault();
       e.stopPropagation();
+
+      if (isRealButtonReady(realButton)) {
+        realButton.click();
+        return;
+      }
+
       scrollToAttributeTarget();
     });
 
     fakeCta.addEventListener('keydown', function (e) {
+      var realButton = getRealButton();
+
       if (e.key !== 'Enter' && e.key !== ' ') return;
 
       e.preventDefault();
       e.stopPropagation();
+
+      if (isRealButtonReady(realButton)) {
+        realButton.click();
+        return;
+      }
+
       scrollToAttributeTarget();
     });
   }
 
-  function removeFakeCta(realButton) {
-    var fakeCta = document.querySelector('.' + FAKE_CTA_CLASS);
+  function removeOldVariationCta() {
+    var oldFake = document.querySelector('.product-add__button-scroll');
 
-    if (fakeCta) {
-      fakeCta.remove();
-    }
-
-    if (realButton) {
-      realButton.classList.remove(HIDE_REAL_CTA_CLASS);
+    if (oldFake) {
+      oldFake.remove();
     }
   }
 
-  function createOrUpdateFakeCta(realButton) {
+  function createFakeCtaIfNeeded(realButton) {
     var row = getButtonRow();
     var wishlistButton = getWishlistButton();
+    var fakeCta = getFakeCta();
 
-    if (!realButton || !row) return;
-
-    if (isRealButtonReady(realButton)) {
-      removeFakeCta(realButton);
-      return;
-    }
-
-    var fakeCta = document.querySelector('.' + FAKE_CTA_CLASS);
+    if (!realButton || !row) return null;
 
     if (!fakeCta) {
       fakeCta = document.createElement('div');
       fakeCta.className = FAKE_CTA_CLASS;
       fakeCta.setAttribute('role', 'button');
       fakeCta.setAttribute('tabindex', '0');
+      fakeCta.setAttribute('aria-hidden', 'false');
       fakeCta.setAttribute('data-bb-scroll-only-cta', 'true');
 
       if (wishlistButton && wishlistButton.parentNode === row) {
@@ -128,8 +143,10 @@
 
     fakeCta.textContent = getDisplayText(realButton);
     fakeCta.setAttribute('aria-label', fakeCta.textContent.trim());
+    fakeCta.setAttribute('aria-hidden', 'false');
+    fakeCta.setAttribute('tabindex', '0');
 
-    realButton.classList.add(HIDE_REAL_CTA_CLASS);
+    return fakeCta;
   }
 
   function guardRealButton(realButton) {
@@ -144,31 +161,39 @@
 
         e.preventDefault();
         e.stopPropagation();
+
         scrollToAttributeTarget();
       },
       true
     );
   }
 
-  function removeOldScrollCtaClassElement() {
-    var oldFake = document.querySelector('.product-add__button-scroll');
+  function lockWrapperVisible(wrapper) {
+    if (!wrapper) return;
 
-    if (oldFake && oldFake.getAttribute('data-bb-scroll-only-cta') !== 'true') {
-      oldFake.remove();
-    }
+    /*
+      Do not depend on product-add__wrapper--show.
+      The CSS below keeps the base wrapper visible.
+    */
+    wrapper.style.display = 'block';
+    wrapper.style.visibility = 'visible';
+    wrapper.style.opacity = '1';
+    wrapper.style.transform = 'none';
+    wrapper.style.pointerEvents = 'auto';
   }
 
   function runVariation() {
     var wrapper = getWrapper();
     var realButton = getRealButton();
 
-    if (!wrapper || !realButton) return;
+    if (!wrapper || !realButton || !getButtonRow()) return;
 
-    wrapper.classList.add('product-add__wrapper--show');
-
-    removeOldScrollCtaClassElement();
+    lockWrapperVisible(wrapper);
+    removeOldVariationCta();
     guardRealButton(realButton);
-    createOrUpdateFakeCta(realButton);
+    createFakeCtaIfNeeded(realButton);
+
+    realButton.classList.add(HIDE_REAL_CTA_CLASS);
   }
 
   var initTimer = setInterval(function () {
@@ -177,6 +202,11 @@
 
       runVariation();
 
+      /*
+        Lower-frequency sync only.
+        The wrapper visibility is handled by CSS now, so we avoid fighting
+        the site’s scroll logic every few hundred milliseconds.
+      */
       if (!refreshTimer) {
         refreshTimer = setInterval(runVariation, REFRESH_INTERVAL);
       }
