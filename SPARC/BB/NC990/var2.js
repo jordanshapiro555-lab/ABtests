@@ -1,97 +1,215 @@
 (function () {
+  var POLL_INTERVAL = 100;
+  var REFRESH_INTERVAL = 1000;
 
-  function attachScrollToButton() {
-    var button = document.querySelector('.product-add__button');
-    if (!button) return;
+  var HIDE_REAL_CTA_CLASS = 'bb-hide-real-cta';
+  var FAKE_CTA_CLASS = 'bb-scroll-size-cta';
 
-    if (button.dataset.scrollBound === 'true') return;
-    button.dataset.scrollBound = 'true';
+  var refreshTimer = null;
 
-    button.addEventListener('click', function (e) {
+  function getWrapper() {
+    return document.querySelector('.product-add__wrapper');
+  }
 
-      var text = button.textContent.trim().toLowerCase();
-      if (text === 'add to bag') return;
+  function getRealButton() {
+    return document.querySelector('.product-add__button.add-to-cart');
+  }
 
-      if (!button.disabled) return;
+  function getButtonRow() {
+    return document.querySelector('.product-add__container.cart-and-ipay > .flex');
+  }
+
+  function getWishlistButton() {
+    return document.querySelector('.product-add__container.cart-and-ipay .button--wishlist');
+  }
+
+  function getFakeCta() {
+    return document.querySelector('.' + FAKE_CTA_CLASS);
+  }
+
+  function getButtonText(button) {
+    return ((button && button.textContent) || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function getDisplayText(button) {
+    var text = ((button && button.textContent) || '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return text || button.getAttribute('data-disabled-text') || 'Select A Size';
+  }
+
+  function getAttributeTarget() {
+    return document.querySelector(
+      '.product-attribute.product-attribute__swatches.product-attribute--Size, ' +
+      '.product-attribute--Size, ' +
+      '.product-attribute.product-attribute__swatches.product-attribute--Color, ' +
+      '.product-attribute--Color'
+    );
+  }
+
+  function isRealButtonReady(button) {
+    if (!button) return false;
+
+    return (
+      getButtonText(button) === 'add to bag' &&
+      !button.disabled &&
+      !button.hasAttribute('disabled')
+    );
+  }
+
+  function scrollToAttributeTarget() {
+    var target = getAttributeTarget();
+    if (!target) return;
+
+    var targetY = target.getBoundingClientRect().top + window.pageYOffset - 100;
+
+    window.scrollTo({
+      top: targetY,
+      behavior: 'smooth'
+    });
+  }
+
+  function bindFakeCta(fakeCta) {
+    if (!fakeCta || fakeCta.dataset.bbBound === 'true') return;
+
+    fakeCta.dataset.bbBound = 'true';
+
+    fakeCta.addEventListener('click', function (e) {
+      var realButton = getRealButton();
 
       e.preventDefault();
       e.stopPropagation();
 
-      var target = document.querySelector('.product-attribute.product-attribute__swatches.product-attribute--Color');
-      if (!target) return;
+      if (isRealButtonReady(realButton)) {
+        realButton.click();
+        return;
+      }
 
+      scrollToAttributeTarget();
+    });
+
+    fakeCta.addEventListener('keydown', function (e) {
+      var realButton = getRealButton();
+
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isRealButtonReady(realButton)) {
+        realButton.click();
+        return;
+      }
+
+      scrollToAttributeTarget();
     });
   }
 
-  function forceStickyBar() {
-    var wrapper = document.querySelector('.product-add__wrapper');
+  function removeOldVariationCta() {
+    var oldFake = document.querySelector('.product-add__button-scroll');
+
+    if (oldFake) {
+      oldFake.remove();
+    }
+  }
+
+  function createFakeCtaIfNeeded(realButton) {
+    var row = getButtonRow();
+    var wishlistButton = getWishlistButton();
+    var fakeCta = getFakeCta();
+
+    if (!realButton || !row) return null;
+
+    if (!fakeCta) {
+      fakeCta = document.createElement('div');
+      fakeCta.className = FAKE_CTA_CLASS;
+      fakeCta.setAttribute('role', 'button');
+      fakeCta.setAttribute('tabindex', '0');
+      fakeCta.setAttribute('aria-hidden', 'false');
+      fakeCta.setAttribute('data-bb-scroll-only-cta', 'true');
+
+      if (wishlistButton && wishlistButton.parentNode === row) {
+        row.insertBefore(fakeCta, wishlistButton);
+      } else {
+        row.appendChild(fakeCta);
+      }
+
+      bindFakeCta(fakeCta);
+    }
+
+    fakeCta.textContent = getDisplayText(realButton);
+    fakeCta.setAttribute('aria-label', fakeCta.textContent.trim());
+    fakeCta.setAttribute('aria-hidden', 'false');
+    fakeCta.setAttribute('tabindex', '0');
+
+    return fakeCta;
+  }
+
+  function guardRealButton(realButton) {
+    if (!realButton || realButton.dataset.bbGuardBound === 'true') return;
+
+    realButton.dataset.bbGuardBound = 'true';
+
+    realButton.addEventListener(
+      'click',
+      function (e) {
+        if (isRealButtonReady(realButton)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        scrollToAttributeTarget();
+      },
+      true
+    );
+  }
+
+  function lockWrapperVisible(wrapper) {
     if (!wrapper) return;
 
-    wrapper.classList.add('product-add__wrapper--show');
-
-    var observer = new MutationObserver(function (mutations) {
-      mutations.forEach(function (mutation) {
-        if (mutation.attributeName === 'class') {
-          if (!wrapper.classList.contains('product-add__wrapper--show')) {
-            wrapper.classList.add('product-add__wrapper--show');
-          }
-        }
-      });
-    });
-
-    observer.observe(wrapper, { attributes: true });
-
-    attachScrollToButton();
+    /*
+      Do not depend on product-add__wrapper--show.
+      The CSS below keeps the base wrapper visible.
+    */
+    wrapper.style.display = 'block';
+    wrapper.style.visibility = 'visible';
+    wrapper.style.opacity = '1';
+    wrapper.style.transform = 'none';
+    wrapper.style.pointerEvents = 'auto';
   }
 
-  var interval = setInterval(function () {
-    var el = document.querySelector('.product-add__wrapper');
-    if (el) {
-      clearInterval(interval);
-      forceStickyBar();
+  function runVariation() {
+    var wrapper = getWrapper();
+    var realButton = getRealButton();
 
-      setInterval(function () {
-        attachScrollToButton();
-        enhanceAddToCartButton();
-      }, 500);
-    }
-  }, 100);
+    if (!wrapper || !realButton || !getButtonRow()) return;
 
-  function enhanceAddToCartButton() {
+    lockWrapperVisible(wrapper);
+    removeOldVariationCta();
+    guardRealButton(realButton);
+    createFakeCtaIfNeeded(realButton);
 
-    var fakeButton = document.querySelector('.product-add__button-scroll');
-    if (fakeButton) {
-      fakeButton.remove();
-    }
-
-    var button = document.querySelector('.product-add__button');
-    if (!button) return;
-
-    if (button.hasAttribute('disabled')) {
-      button.removeAttribute('disabled');
-    }
-
-    if (button.dataset.customScrollBound === 'true') return;
-    button.dataset.customScrollBound = 'true';
-
-    var colorSection = document.querySelector('.product-attribute--Color');
-
-    button.addEventListener('click', function () {
-
-      var text = button.textContent.trim().toLowerCase();
-      if (text === 'add to bag') return;
-
-      if (!colorSection) return;
-
-      setTimeout(function () {
-        colorSection.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }, 200);
-
-    });
-
+    realButton.classList.add(HIDE_REAL_CTA_CLASS);
   }
 
+  var initTimer = setInterval(function () {
+    if (getWrapper() && getRealButton() && getButtonRow()) {
+      clearInterval(initTimer);
+
+      runVariation();
+
+      /*
+        Lower-frequency sync only.
+        The wrapper visibility is handled by CSS now, so we avoid fighting
+        the site’s scroll logic every few hundred milliseconds.
+      */
+      if (!refreshTimer) {
+        refreshTimer = setInterval(runVariation, REFRESH_INTERVAL);
+      }
+    }
+  }, POLL_INTERVAL);
 })();
