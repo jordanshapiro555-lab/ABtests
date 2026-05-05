@@ -141,11 +141,20 @@
       bindFakeCta(fakeCta);
     }
 
-    fakeCta.textContent = getDisplayText(realButton);
-    fakeCta.setAttribute('aria-label', fakeCta.textContent.trim());
-    fakeCta.setAttribute('aria-hidden', 'false');
-    fakeCta.setAttribute('tabindex', '0');
+var displayText = getDisplayText(realButton);
+var normalizedText = displayText.replace(/\s+/g, ' ').trim().toLowerCase();
 
+fakeCta.textContent = displayText;
+fakeCta.setAttribute('aria-label', displayText.trim());
+fakeCta.setAttribute('aria-hidden', 'false');
+fakeCta.setAttribute('tabindex', '0');
+
+if (normalizedText === 'select a size') {
+  fakeCta.classList.add('bb-scroll-size-cta--select-size');
+} else {
+  fakeCta.classList.remove('bb-scroll-size-cta--select-size');
+}
+    
     return fakeCta;
   }
 
