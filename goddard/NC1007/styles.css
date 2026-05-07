@@ -1,0 +1,60 @@
+#searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner {
+  background: #f6f1e9 !important;
+  color: #08294f !important;
+  padding: 16px 18px 14px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #e2ddd4 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  font-family: "Noto Sans", Arial, sans-serif !important;
+}
+
+#searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner h3.goddard-daycare-milestone-banner__title {
+  display: block !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  color: #08294f !important;
+  font-family: "Noto Sans", Arial, sans-serif !important;
+  font-size: 17px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+#searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner ul.goddard-daycare-milestone-banner__list {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 0 0 18px !important;
+  list-style: disc outside !important;
+  color: #08294f !important;
+}
+
+#searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner ul.goddard-daycare-milestone-banner__list li {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #08294f !important;
+  font-family: "Noto Sans", Arial, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+
+@media (max-width: 767px) {
+  #searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner {
+    padding: 14px 16px 12px !important;
+  }
+
+  #searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner h3.goddard-daycare-milestone-banner__title {
+    font-size: 16px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 7px !important;
+  }
+
+  #searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner ul.goddard-daycare-milestone-banner__list li {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+}
