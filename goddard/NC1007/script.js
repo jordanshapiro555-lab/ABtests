@@ -1,197 +1,101 @@
 <script>
 (function () {
   var TEST_ID = 'goddard-daycare-milestone-banner';
-  var API_MATCH = '/apps/gsi/api/v1/schools';
 
   var SELECTORS = {
     heading: '#searchNearYouHeading',
-    resultsWrap: '.gsi-school-locator__results',
+    resultsWrap: '#searchNearYou .gsi-school-locator__results',
     resultsList: '#searchNearYouResultsList',
-    resultsItem: '.gsi-school-locator__results-item'
+    resultsItem: '#searchNearYouResultsList .gsi-school-locator__results-item'
   };
 
-  function addStyles() {
-    if (document.getElementById(TEST_ID + '-styles')) return;
-
-    var style = document.createElement('style');
-    style.id = TEST_ID + '-styles';
-    style.textContent = `
-      .${TEST_ID} {
-        background: #fbf7ef;
-        border-radius: 0;
-        box-shadow: 0 2px 10px rgba(8, 41, 79, 0.12);
-        padding: 18px 22px 16px;
-        margin: 0 0 22px;
-        color: #08294f;
-        font-family: inherit;
-      }
-
-      .${TEST_ID}__title {
-        font-size: 22px;
-        line-height: 1.25;
-        font-weight: 700;
-        margin: 0 0 10px;
-        color: #08294f;
-      }
-
-      .${TEST_ID}__list {
-        margin: 0;
-        padding-left: 21px;
-      }
-
-      .${TEST_ID}__list li {
-        font-size: 16px;
-        line-height: 1.45;
-        color: #08294f;
-        margin: 0;
-      }
-
-      @media (max-width: 767px) {
-        .${TEST_ID} {
-          padding: 16px 18px 14px;
-          margin-bottom: 18px;
-        }
-
-        .${TEST_ID}__title {
-          font-size: 20px;
-        }
-
-        .${TEST_ID}__list li {
-          font-size: 15px;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
+  var MAX_WAIT_MS = 15000;
+  var CHECK_INTERVAL_MS = 250;
+  var startedAt = Date.now();
+  var intervalId = null;
+  var observer = null;
 
   function updateHeading() {
     var heading = document.querySelector(SELECTORS.heading);
-
-    if (heading) {
+    if (heading && heading.textContent.trim() !== 'Find your Goddard Daycare') {
       heading.textContent = 'Find your Goddard Daycare';
     }
   }
 
-  function resultsArePresent() {
-    var resultsWrap = document.querySelector(SELECTORS.resultsWrap);
-    var resultsList = document.querySelector(SELECTORS.resultsList);
-    var resultsItem = document.querySelector(SELECTORS.resultsItem);
-
-    return !!(resultsWrap && resultsList && resultsItem);
+  function hasResults() {
+    return !!(
+      document.querySelector(SELECTORS.resultsWrap) &&
+      document.querySelector(SELECTORS.resultsList) &&
+      document.querySelector(SELECTORS.resultsItem)
+    );
   }
 
   function insertBanner() {
     updateHeading();
 
-    if (!resultsArePresent()) return false;
-    if (document.querySelector('.' + TEST_ID)) return true;
+    var resultsWrap = document.querySelector(SELECTORS.resultsWrap);
+    var resultsList = document.querySelector(SELECTORS.resultsList);
 
-    var heading = document.querySelector(SELECTORS.heading);
-    if (!heading || !heading.parentNode) return false;
+    if (!resultsWrap || !resultsList) return false;
+    if (!hasResults()) return false;
 
-    addStyles();
+    var existing = resultsWrap.querySelector('.' + TEST_ID);
+    if (existing) return true;
 
     var banner = document.createElement('div');
     banner.className = TEST_ID;
     banner.setAttribute('role', 'region');
     banner.setAttribute('aria-label', 'Pre-School Classroom Milestones');
 
-    banner.innerHTML = `
-      <h3 class="${TEST_ID}__title">Pre-School Classroom Milestones:</h3>
-      <ul class="${TEST_ID}__list">
-        <li>Creative expression through music and arts, scientific investigations and understanding consequences</li>
-      </ul>
-    `;
+    banner.innerHTML =
+      '<h3 class="' + TEST_ID + '__title">Pre-School Classroom Milestones:</h3>' +
+      '<ul class="' + TEST_ID + '__list">' +
+        '<li>Creative expression through music and arts, scientific investigations and understanding consequences</li>' +
+      '</ul>';
 
-    heading.parentNode.insertBefore(banner, heading);
+    resultsWrap.insertBefore(banner, resultsList);
 
     return true;
   }
 
-  function waitForResultsThenInsert() {
-    if (insertBanner()) return;
+  function cleanup() {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
 
-    var observer = new MutationObserver(function () {
-      if (insertBanner()) {
-        observer.disconnect();
-      }
-    });
-
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true
-    });
-
-    setTimeout(function () {
+    if (observer) {
       observer.disconnect();
-      insertBanner();
-    }, 10000);
+      observer = null;
+    }
   }
 
-  function patchFetch() {
-    if (!window.fetch || window.__goddardTargetFetchPatched) return;
-    window.__goddardTargetFetchPatched = true;
+  function check() {
+    updateHeading();
 
-    var originalFetch = window.fetch;
+    if (insertBanner()) {
+      cleanup();
+      return;
+    }
 
-    window.fetch = function () {
-      var fetchArgs = arguments;
-      var requestUrl = '';
-
-      try {
-        requestUrl = typeof fetchArgs[0] === 'string'
-          ? fetchArgs[0]
-          : fetchArgs[0] && fetchArgs[0].url;
-      } catch (e) {}
-
-      return originalFetch.apply(this, fetchArgs).then(function (response) {
-        if (requestUrl && requestUrl.indexOf(API_MATCH) > -1) {
-          setTimeout(waitForResultsThenInsert, 100);
-        }
-
-        return response;
-      });
-    };
-  }
-
-  function patchXHR() {
-    if (window.__goddardTargetXHRPatched) return;
-    window.__goddardTargetXHRPatched = true;
-
-    var originalOpen = XMLHttpRequest.prototype.open;
-    var originalSend = XMLHttpRequest.prototype.send;
-
-    XMLHttpRequest.prototype.open = function (method, url) {
-      this.__goddardTargetUrl = url;
-      return originalOpen.apply(this, arguments);
-    };
-
-    XMLHttpRequest.prototype.send = function () {
-      var xhr = this;
-
-      xhr.addEventListener('loadend', function () {
-        try {
-          if (
-            xhr.__goddardTargetUrl &&
-            xhr.__goddardTargetUrl.indexOf(API_MATCH) > -1 &&
-            xhr.status >= 200 &&
-            xhr.status < 300
-          ) {
-            setTimeout(waitForResultsThenInsert, 100);
-          }
-        } catch (e) {}
-      });
-
-      return originalSend.apply(this, arguments);
-    };
+    if (Date.now() - startedAt > MAX_WAIT_MS) {
+      cleanup();
+    }
   }
 
   function init() {
-    updateHeading();
-    patchFetch();
-    patchXHR();
-    waitForResultsThenInsert();
+    check();
+
+    intervalId = setInterval(check, CHECK_INTERVAL_MS);
+
+    observer = new MutationObserver(function () {
+      check();
+    });
+
+    observer.observe(document.body || document.documentElement, {
+      childList: true,
+      subtree: true
+    });
   }
 
   if (document.readyState === 'loading') {
