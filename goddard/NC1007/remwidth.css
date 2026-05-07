@@ -1,0 +1,5 @@
+@media (min-width: 48rem) {
+#gsiSchoolLocator > div.gsi-school-locator__panel {
+  max-width: 19rem !important;
+}
+}
