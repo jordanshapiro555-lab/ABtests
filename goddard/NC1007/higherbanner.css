@@ -1,0 +1,110 @@
+#searchNearYou .goddard-daycare-milestone-banner {
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #f3e6cd !important;
+  color: #08294f !important;
+  padding: 12px 18px 13px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(8, 41, 79, 0.12) !important;
+  box-shadow: 0 1px 5px rgba(8, 41, 79, 0.08) !important;
+  font-family: "Noto Sans", Arial, sans-serif !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  z-index: 9999 !important;
+}
+
+#searchNearYou .goddard-daycare-milestone-banner__title {
+  display: block !important;
+  margin: 0 0 7px !important;
+  padding: 0 !important;
+  color: #08294f !important;
+  font-family: "Noto Sans", Arial, sans-serif !important;
+  font-size: 17px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  text-decoration: none !important;
+}
+
+#searchNearYou .goddard-daycare-milestone-banner__body {
+  display: grid !important;
+  grid-template-columns: 10px 1fr !important;
+  column-gap: 10px !important;
+  align-items: start !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #08294f !important;
+  font-family: "Noto Sans", Arial, sans-serif !important;
+}
+
+#searchNearYou .goddard-daycare-milestone-banner__bullet {
+  display: block !important;
+  color: #08294f !important;
+  font-family: "Noto Sans", Arial, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#searchNearYou .goddard-daycare-milestone-banner__copy {
+  display: block !important;
+  color: #08294f !important;
+  font-family: "Noto Sans", Arial, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.38 !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  text-decoration: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Mobile: banner sits immediately above the first card, overlaying the bottom of the map, not the card */
+@media (max-width: 47.999rem) {
+  #searchNearYou .gsi-school-locator__results {
+    position: relative !important;
+    overflow: visible !important;
+    z-index: 20 !important;
+  }
+
+  #searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 100% !important;
+    margin: 0 !important;
+    transform: none !important;
+    pointer-events: none !important;
+  }
+
+  #searchNearYou #searchNearYouResultsList {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+}
+
+/* Desktop/tablet: banner remains above the results list in normal flow */
+@media (min-width: 48rem) {
+  #searchNearYou .gsi-school-locator__results > .goddard-daycare-milestone-banner {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+}
