@@ -157,7 +157,10 @@
                     right: '0',
                     margin: '0',
                     transform: 'none',
-                    'pointer-events': 'none',
+                    'pointer-events': 'auto',
+                    'touch-action': 'pan-y',
+                    '-webkit-user-select': 'none',
+                    'user-select': 'none',
                     'z-index': '9999'
                 });
             } else {
@@ -170,9 +173,26 @@
                     margin: '0',
                     transform: 'none',
                     'pointer-events': 'auto',
+                    'touch-action': 'auto',
                     'z-index': '9999'
                 });
             }
+        }
+
+        function protectBannerScroll(banner) {
+            if (!banner || banner.getAttribute('data-goddard-scroll-protected') === 'true') return;
+
+            banner.setAttribute('data-goddard-scroll-protected', 'true');
+
+            var stopMapInteraction = function(e) {
+                e.stopPropagation();
+            };
+
+            banner.addEventListener('touchstart', stopMapInteraction, { passive: true });
+            banner.addEventListener('touchmove', stopMapInteraction, { passive: true });
+            banner.addEventListener('pointerdown', stopMapInteraction);
+            banner.addEventListener('pointermove', stopMapInteraction);
+            banner.addEventListener('wheel', stopMapInteraction, { passive: true });
         }
 
         function getOrCreateBanner(resultsWrap) {
@@ -214,6 +234,7 @@
 
             applyBannerStyles(banner);
             applyPlacement(resultsWrap, resultsList, banner);
+            protectBannerScroll(banner);
 
             isApplying = false;
             return true;
