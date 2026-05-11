@@ -84,7 +84,10 @@
     bottom: 100% !important;
     margin: 0 !important;
     transform: none !important;
-    pointer-events: none !important;
+    pointer-events: auto !important;
+    touch-action: pan-y !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
   }
 
   #searchNearYou #searchNearYouResultsList {
@@ -106,5 +109,6 @@
     margin: 0 !important;
     transform: none !important;
     pointer-events: auto !important;
+    touch-action: auto !important;
   }
 }
