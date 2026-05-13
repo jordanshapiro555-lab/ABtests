@@ -4,6 +4,7 @@
 
   var HIDE_REAL_CTA_CLASS = 'bb-hide-real-cta';
   var FAKE_CTA_CLASS = 'bb-scroll-size-cta';
+  var SELECT_SIZE_CLASS = 'bb-scroll-size-cta--select-size';
 
   var refreshTimer = null;
 
@@ -73,6 +74,18 @@
     });
   }
 
+  function triggerRealButtonClick(realButton) {
+    if (!realButton) return;
+
+    realButton.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      })
+    );
+  }
+
   function bindFakeCta(fakeCta) {
     if (!fakeCta || fakeCta.dataset.bbBound === 'true') return;
 
@@ -85,7 +98,7 @@
       e.stopPropagation();
 
       if (isRealButtonReady(realButton)) {
-        realButton.click();
+        triggerRealButtonClick(realButton);
         return;
       }
 
@@ -101,7 +114,7 @@
       e.stopPropagation();
 
       if (isRealButtonReady(realButton)) {
-        realButton.click();
+        triggerRealButtonClick(realButton);
         return;
       }
 
@@ -117,46 +130,71 @@
     }
   }
 
-  function createFakeCtaIfNeeded(realButton) {
-    var row = getButtonRow();
-    var wishlistButton = getWishlistButton();
-    var fakeCta = getFakeCta();
+function createFakeCtaIfNeeded(realButton) {
+  var row = getButtonRow();
+  var wishlistButton = getWishlistButton();
+  var fakeCta = getFakeCta();
 
-    if (!realButton || !row) return null;
+  if (!realButton || !row) return null;
 
-    if (!fakeCta) {
-      fakeCta = document.createElement('div');
-      fakeCta.className = FAKE_CTA_CLASS;
-      fakeCta.setAttribute('role', 'button');
-      fakeCta.setAttribute('tabindex', '0');
-      fakeCta.setAttribute('aria-hidden', 'false');
-      fakeCta.setAttribute('data-bb-scroll-only-cta', 'true');
+  if (!fakeCta) {
+    fakeCta = document.createElement('div');
+    fakeCta.className = FAKE_CTA_CLASS;
+    fakeCta.setAttribute('role', 'button');
+    fakeCta.setAttribute('tabindex', '0');
+    fakeCta.setAttribute('aria-hidden', 'false');
+    fakeCta.setAttribute('data-bb-scroll-only-cta', 'true');
 
-      if (wishlistButton && wishlistButton.parentNode === row) {
-        row.insertBefore(fakeCta, wishlistButton);
-      } else {
-        row.appendChild(fakeCta);
-      }
-
-      bindFakeCta(fakeCta);
+    if (wishlistButton && wishlistButton.parentNode === row) {
+      row.insertBefore(fakeCta, wishlistButton);
+    } else {
+      row.appendChild(fakeCta);
     }
 
-var displayText = getDisplayText(realButton);
-var normalizedText = displayText.replace(/\s+/g, ' ').trim().toLowerCase();
-
-fakeCta.textContent = displayText;
-fakeCta.setAttribute('aria-label', displayText.trim());
-fakeCta.setAttribute('aria-hidden', 'false');
-fakeCta.setAttribute('tabindex', '0');
-
-if (normalizedText === 'select a size') {
-  fakeCta.classList.add('bb-scroll-size-cta--select-size');
-} else {
-  fakeCta.classList.remove('bb-scroll-size-cta--select-size');
-}
-    
-    return fakeCta;
+    bindFakeCta(fakeCta);
   }
+
+  var displayText = getDisplayText(realButton);
+  var normalizedText = displayText.replace(/\s+/g, ' ').trim().toLowerCase();
+  var realButtonReady = isRealButtonReady(realButton);
+
+  fakeCta.textContent = displayText;
+  fakeCta.setAttribute('aria-label', displayText.trim());
+
+  if (realButtonReady) {
+    /*
+      Safari-safe behavior:
+      Once the product is add-to-bag-ready, restore the real native button
+      and hide the fake div CTA. This lets Safari use the site's native
+      add-to-cart handler directly.
+    */
+    realButton.classList.remove(HIDE_REAL_CTA_CLASS);
+
+    fakeCta.classList.add('bb-hide-fake-cta');
+    fakeCta.setAttribute('aria-hidden', 'true');
+    fakeCta.setAttribute('tabindex', '-1');
+  } else {
+    /*
+      Pre-size-selection behavior:
+      Keep the real native button hidden and show the fake CTA.
+      This prevents premature clicks/events on:
+      button[data-add-enabled], button.product-add__button.add-to-cart
+    */
+    realButton.classList.add(HIDE_REAL_CTA_CLASS);
+
+    fakeCta.classList.remove('bb-hide-fake-cta');
+    fakeCta.setAttribute('aria-hidden', 'false');
+    fakeCta.setAttribute('tabindex', '0');
+  }
+
+  if (normalizedText === 'select a size') {
+    fakeCta.classList.add(SELECT_SIZE_CLASS);
+  } else {
+    fakeCta.classList.remove(SELECT_SIZE_CLASS);
+  }
+
+  return fakeCta;
+}
 
   function guardRealButton(realButton) {
     if (!realButton || realButton.dataset.bbGuardBound === 'true') return;
@@ -180,10 +218,6 @@ if (normalizedText === 'select a size') {
   function lockWrapperVisible(wrapper) {
     if (!wrapper) return;
 
-    /*
-      Do not depend on product-add__wrapper--show.
-      The CSS below keeps the base wrapper visible.
-    */
     wrapper.style.display = 'block';
     wrapper.style.visibility = 'visible';
     wrapper.style.opacity = '1';
@@ -201,8 +235,6 @@ if (normalizedText === 'select a size') {
     removeOldVariationCta();
     guardRealButton(realButton);
     createFakeCtaIfNeeded(realButton);
-
-    realButton.classList.add(HIDE_REAL_CTA_CLASS);
   }
 
   var initTimer = setInterval(function () {
@@ -211,11 +243,6 @@ if (normalizedText === 'select a size') {
 
       runVariation();
 
-      /*
-        Lower-frequency sync only.
-        The wrapper visibility is handled by CSS now, so we avoid fighting
-        the site’s scroll logic every few hundred milliseconds.
-      */
       if (!refreshTimer) {
         refreshTimer = setInterval(runVariation, REFRESH_INTERVAL);
       }
