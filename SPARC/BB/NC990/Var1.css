@@ -69,7 +69,25 @@
   }
 
   .product-add__button.bb-hide-real-cta {
-    display: none !important;
+    display: block !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: auto !important;
+
+    width: 1px !important;
+    height: 1px !important;
+    min-width: 1px !important;
+    min-height: 1px !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+
+    opacity: 0 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+
+    overflow: hidden !important;
   }
 
   .bb-scroll-size-cta {
@@ -115,7 +133,7 @@
 
     transition: none !important;
   }
-  
+
   .bb-scroll-size-cta.bb-scroll-size-cta--select-size {
     background-color: #FFF !important;
     border-color: #323952 !important;
@@ -144,4 +162,8 @@
   .form-control--qty {
     max-height: 2.5rem !important;
   }
+}
+
+.bb-scroll-size-cta.bb-hide-fake-cta {
+  display: none !important;
 }
