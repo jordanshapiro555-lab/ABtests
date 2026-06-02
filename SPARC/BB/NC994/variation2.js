@@ -4,7 +4,7 @@
   var actionUrlAttr = 'data-action-url';
 
   var OVERLAY_ID = 'optly-savedbag-overlay';
-  var SESSION_KEY = 'optly_savedbag_autoshow_v23';
+  var SESSION_KEY = 'optly_savedbag_autoshow_v24';
   var VIEW_BAG_URL = 'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-Show';
 
   var DESKTOP_MIN_WIDTH = 1024;
@@ -21,6 +21,9 @@
   var pollTimer = null;
   var confirmTimer = null;
   var delayTimer = null;
+  var emailCaptureObserver = null;
+  var cachedHTML = null;
+  var fetchInProgress = false;
 
   function qs(sel, root) {
     return (root || document).querySelector(sel);
@@ -58,6 +61,7 @@
     if (!el) return false;
 
     var style = window.getComputedStyle(el);
+
     if (
       style.display === 'none' ||
       style.visibility === 'hidden' ||
@@ -67,6 +71,7 @@
     }
 
     var rect = el.getBoundingClientRect();
+
     return (
       rect.width > 0 &&
       rect.height > 0 &&
@@ -78,17 +83,81 @@
   }
 
   function isEmailCaptureVisible() {
-    var closeBtn = qs('#closeIconContainer[data-testid="closeIcon"]');
-    if (isVisible(closeBtn)) return true;
+    var selectors = [
+      '#closeIconContainer[data-testid="closeIcon"]',
+      '#fieldCaptureForm',
+      '[data-testid="fieldCaptureForm"]',
+      '#contentframe',
+      '#content',
+      '#attentive_overlay',
+      'iframe[src*="attentive"]',
+      'iframe[id*="attentive"]',
+      'iframe[name*="attentive"]'
+    ];
 
-    var forms = qsa('#fieldCaptureForm, [data-testid="fieldCaptureForm"]');
+    var nodes = qsa(selectors.join(','));
 
-    for (var i = 0; i < forms.length; i++) {
-      if (!isVisible(forms[i])) continue;
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
 
-      var rect = forms[i].getBoundingClientRect();
+      if (!isVisible(node)) continue;
 
-      if (rect.width >= 200 && rect.height >= 100) {
+      var rect = node.getBoundingClientRect();
+      var style = window.getComputedStyle(node);
+
+      var isCloseIcon =
+        node.matches &&
+        node.matches('#closeIconContainer[data-testid="closeIcon"]');
+
+      if (isCloseIcon) return true;
+
+      var isFieldCapture =
+        node.matches &&
+        (
+          node.matches('#fieldCaptureForm') ||
+          node.matches('[data-testid="fieldCaptureForm"]')
+        );
+
+      if (isFieldCapture && rect.width >= 180 && rect.height >= 80) {
+        return true;
+      }
+
+      var containsEmailCapture =
+        node.querySelector &&
+        (
+          node.querySelector('#fieldCaptureForm') ||
+          node.querySelector('[data-testid="fieldCaptureForm"]') ||
+          node.querySelector('#closeIconContainer[data-testid="closeIcon"]')
+        );
+
+      if (containsEmailCapture && rect.width >= 180 && rect.height >= 80) {
+        return true;
+      }
+
+      var isKnownAttentiveShell =
+        node.id === 'contentframe' ||
+        node.id === 'content' ||
+        node.id === 'attentive_overlay' ||
+        (
+          node.tagName &&
+          node.tagName.toLowerCase() === 'iframe' &&
+          (
+            (node.src && node.src.indexOf('attentive') > -1) ||
+            (node.id && node.id.indexOf('attentive') > -1) ||
+            (node.name && node.name.indexOf('attentive') > -1)
+          )
+        );
+
+      var isModalSized =
+        rect.width >= 220 &&
+        rect.height >= 120;
+
+      var isLikelyOverlay =
+        style.position === 'fixed' ||
+        style.position === 'absolute' ||
+        parseInt(style.zIndex, 10) >= 1000;
+
+      if (isKnownAttentiveShell && isModalSized && isLikelyOverlay) {
         return true;
       }
     }
@@ -104,6 +173,7 @@
     clearTimer(pollTimer);
     clearTimer(confirmTimer);
     clearTimer(delayTimer);
+
     pollTimer = null;
     confirmTimer = null;
     delayTimer = null;
@@ -190,7 +260,9 @@
 
   function updateSavedBagTitle(root) {
     var title = qs('#optly-savedbag-title');
-    if (title) title.textContent = 'We Saved Your Bag! (' + getSavedBagItemCount(root || document) + ')';
+    if (title) {
+      title.textContent = 'We Saved Your Bag! (' + getSavedBagItemCount(root || document) + ')';
+    }
   }
 
   function position(panel) {
@@ -332,6 +404,39 @@
     }
   }
 
+  function renderHTML(html) {
+    if (isEmailCaptureVisible()) {
+      emailWasSeen = true;
+      closeOverlay();
+      waitThenOpen();
+      return;
+    }
+
+    var wrap = ensureShell();
+    var body = qs('#optly-savedbag-body', wrap);
+    var tmp = document.createElement('div');
+
+    if (!body) return;
+
+    tmp.innerHTML = html;
+
+    var overlayNode =
+      tmp.querySelector('[data-minicart-component="overlay"]') ||
+      tmp.querySelector('.header__minicart-overlay') ||
+      tmp;
+
+    body.innerHTML = '';
+
+    while (overlayNode.firstChild) {
+      body.appendChild(overlayNode.firstChild);
+    }
+
+    cleanMarkup(body);
+    customizeButtons(body);
+    updateSavedBagTitle(body);
+    renderOpen();
+  }
+
   function openOverlay() {
     if (shown() || getQty() <= 0) return;
 
@@ -342,51 +447,38 @@
       return;
     }
 
+    if (cachedHTML) {
+      renderHTML(cachedHTML);
+      return;
+    }
+
+    if (fetchInProgress) return;
+
     var trigger = qs(triggerSel);
     if (!trigger) return;
 
     var url = trigger.getAttribute(actionUrlAttr);
     if (!url) return;
 
-    markShown();
+    fetchInProgress = true;
 
     fetch(url, { credentials: 'include' })
       .then(function (r) {
         return r.text();
       })
       .then(function (html) {
-        if (isEmailCaptureVisible()) {
-          emailWasSeen = true;
-          waitThenOpen();
-          return;
-        }
-
-        var wrap = ensureShell();
-        var body = qs('#optly-savedbag-body', wrap);
-        var tmp = document.createElement('div');
-
-        tmp.innerHTML = html;
-
-        var overlayNode =
-          tmp.querySelector('[data-minicart-component="overlay"]') ||
-          tmp.querySelector('.header__minicart-overlay') ||
-          tmp;
-
-        body.innerHTML = '';
-
-        while (overlayNode.firstChild) {
-          body.appendChild(overlayNode.firstChild);
-        }
-
-        cleanMarkup(body);
-        customizeButtons(body);
-        updateSavedBagTitle(body);
-        renderOpen();
+        fetchInProgress = false;
+        cachedHTML = html;
+        renderHTML(html);
       })
-      .catch(function () {});
+      .catch(function () {
+        fetchInProgress = false;
+      });
   }
 
   function renderOpen() {
+    if (shown() || getQty() <= 0) return;
+
     if (isEmailCaptureVisible()) {
       emailWasSeen = true;
       closeOverlay();
@@ -399,8 +491,8 @@
 
     if (!panel) return;
 
-    wrap.classList.add('optly-open');
-    syncOverlayContainer();
+    position(panel);
+    clampScroll(panel);
 
     requestAnimationFrame(function () {
       if (isEmailCaptureVisible()) {
@@ -410,8 +502,9 @@
         return;
       }
 
-      position(panel);
-      clampScroll(panel);
+      markShown();
+      wrap.classList.add('optly-open');
+      syncOverlayContainer();
 
       requestAnimationFrame(function () {
         if (isEmailCaptureVisible()) {
@@ -473,6 +566,29 @@
     waitThenOpen();
   }
 
+  function startEmailCaptureObserver() {
+    if (emailCaptureObserver || !window.MutationObserver || !document.documentElement) return;
+
+    emailCaptureObserver = new MutationObserver(function () {
+      var wrap = document.getElementById(OVERLAY_ID);
+
+      if (!wrap || !wrap.classList.contains('optly-open')) return;
+
+      if (isEmailCaptureVisible()) {
+        emailWasSeen = true;
+        closeOverlay();
+        waitThenOpen();
+      }
+    });
+
+    emailCaptureObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class', 'aria-hidden', 'hidden']
+    });
+  }
+
   function onResize() {
     clearTimeout(resizeTimer);
 
@@ -514,6 +630,8 @@
     if (started) return;
 
     started = true;
+
+    startEmailCaptureObserver();
     showWhenAllowed();
 
     window.addEventListener('resize', onResize);
@@ -535,11 +653,11 @@
     })();
   }
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(boot, 500);
-} else {
-  document.addEventListener('DOMContentLoaded', function () {
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(boot, 500);
-  });
-}
+  } else {
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(boot, 500);
+    });
+  }
 })();
