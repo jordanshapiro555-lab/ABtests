@@ -1,130 +1,274 @@
 <script id="gsi-branded-search-personalization" type="text/javascript">
-    (function() {
-        /* =========================================================
-           1. ELIGIBILITY GUARD
-           This must be first. Nothing changes on the page unless
-           target_audience=branded_search is present in the URL.
-        ========================================================= */
+(function() {
+    /* =========================================================
+       1. NUCLEAR BFCACHE / BACK-BUTTON GUARD
 
-        var params = new URLSearchParams(window.location.search);
-        var targetAudience = params.get('target_audience');
+       This guard does NOT use sessionStorage.
 
-        if (targetAudience !== 'branded_search') {
-            console.log('[branded_search personalization] Not eligible:', targetAudience);
-            return;
+       If the personalized Homepage is restored through browser
+       back/forward, do not try to repair the cached page in place.
+
+       Instead:
+       - Remove injected DOM
+       - Remove injected CSS
+       - Remove personalization body classes
+       - Reset personalization window flags
+       - Replace the page with the clean Homepage URL
+    ========================================================= */
+
+    var STYLE_ID = 'gsi-branded-search-style';
+
+    function getNavigationType() {
+        var navEntries = performance.getEntriesByType &&
+            performance.getEntriesByType('navigation');
+
+        if (navEntries && navEntries.length) {
+            return navEntries[0].type;
         }
 
-        console.log('[branded_search personalization] Eligible. Running.');
-
-        /* =========================================================
-           2. SINGLE-RUN GUARD
-           Prevents duplicate insertion if Target/custom code runs twice.
-        ========================================================= */
-
-        if (window.__gsiBrandedSearchPersonalizationLoaded) {
-            console.log('[branded_search personalization] Already loaded. Skipping.');
-            return;
+        if (performance.navigation) {
+            if (performance.navigation.type === 1) return 'reload';
+            if (performance.navigation.type === 2) return 'back_forward';
         }
 
-        window.__gsiBrandedSearchPersonalizationLoaded = true;
+        return 'navigate';
+    }
 
-        /* =========================================================
-           3. CSS
-           Injected only after eligibility passes.
-           Do not add this as separate global CSS in Target.
-        ========================================================= */
+    function getCleanUrl() {
+        return (
+            window.location.origin +
+            window.location.pathname +
+            window.location.hash
+        );
+    }
 
-        function injectStyles() {
-            if (document.getElementById('gsi-branded-search-style')) return;
-
-            var style = document.createElement('style');
-            style.id = 'gsi-branded-search-style';
-            style.type = 'text/css';
-
-            style.textContent =
-                '.gsi-nav-search-hidden #gsiNavSearchForm { ' +
-                'opacity: 0 !important; ' +
-                'visibility: hidden !important; ' +
-                'pointer-events: none !important; ' +
-                '} ' +
-
-                '.gsi-nav-search-visible #gsiNavSearchForm { ' +
-                'opacity: 1 !important; ' +
-                'visibility: visible !important; ' +
-                'pointer-events: auto !important; ' +
-                '} ' +
-
-                '.gsi-school-search--hero { ' +
-                'padding-left: 0 !important; ' +
-                '} ' +
-
-                '.gsi-school-search__form-group-hero { ' +
-                'max-width: 33rem !important; ' +
-                '} ' +
-
-                '.hero-search-label { ' +
-                'margin-bottom: 0; ' +
-                '} ' +
-
-                '.gsi-school-search__current-location-hero { ' +
-                'color: #FFF !important; ' +
-                '} ' +
-
-                '.gsi-school-search__form-hero { ' +
-                'align-items: baseline; ' +
-                '} ' +
-
-                '.hero-search-bottom-text { ' +
-                'margin-top: 10px; ' +
-                '} ' +
-
-                '@media only screen and (min-width: 767.98px) { ' +
-                '.gsi-nav-search { ' +
-                'display: none; ' +
-                '} ' +
-                '} ' +
-
-                '@media only screen and (max-width: 550px) { ' +
-                '.hero-search-label { ' +
-                'display: none; ' +
-                '} ' +
-                '}';
-
-            document.head.appendChild(style);
-        }
-
-        injectStyles();
-
-        /* =========================================================
-           4. SHARED WAITFOR HELPER
-        ========================================================= */
-
-        function waitFor(selector, cb, timeout) {
-            timeout = timeout || 8000;
-            var start = Date.now();
-
-            function check() {
-                var el = document.querySelector(selector);
-                if (el) return cb(el);
-                if (Date.now() - start > timeout) {
-                    console.warn('[branded_search personalization] Timed out waiting for:', selector);
-                    return;
+    function clearPersonalizationStorage() {
+        try {
+            Object.keys(sessionStorage).forEach(function(key) {
+                if (key.indexOf('gsiBrandedSearch') === 0) {
+                    sessionStorage.removeItem(key);
                 }
-                requestAnimationFrame(check);
+            });
+        } catch (e) {}
+
+        try {
+            Object.keys(localStorage).forEach(function(key) {
+                if (key.indexOf('gsiBrandedSearch') === 0) {
+                    localStorage.removeItem(key);
+                }
+            });
+        } catch (e) {}
+    }
+
+    function hardWipeDom(reason) {
+        console.log('[branded_search personalization] Hard wipe:', reason || 'unknown');
+
+        var style = document.getElementById(STYLE_ID);
+        if (style) style.remove();
+
+        var heroSearch = document.querySelector('.gsi-school-search--hero');
+        if (heroSearch) heroSearch.remove();
+
+        var heroForm = document.getElementById('gsiSchoolLocatorWidgetFormHero');
+        if (heroForm && heroForm.closest('.gsi-school-search--hero')) {
+            heroForm.closest('.gsi-school-search--hero').remove();
+        }
+
+        if (document.body) {
+            document.body.classList.remove(
+                'gsi-branded-search-active',
+                'gsi-hide-nav-search-once',
+                'gsi-nav-search-hidden',
+                'gsi-nav-search-visible'
+            );
+        }
+
+        window.__gsiBrandedSearchPersonalizationLoaded = false;
+        window.__gsiBrandedSearchStickyNavLoaded = false;
+
+        clearPersonalizationStorage();
+    }
+
+    function forceCleanReload(reason) {
+        console.log('[branded_search personalization] Forcing clean reload:', reason || 'unknown');
+
+        hardWipeDom(reason);
+
+        var cleanUrl = getCleanUrl();
+
+        if (window.location.href !== cleanUrl) {
+            window.location.replace(cleanUrl);
+        } else {
+            window.location.reload();
+        }
+    }
+
+    /*
+      Handles browsers that do a normal page load on back/forward.
+      This must happen before eligibility and before any DOM changes.
+    */
+    if (getNavigationType() === 'back_forward') {
+        forceCleanReload('navigation type back_forward');
+        return;
+    }
+
+    /*
+      Handles browsers that restore the page from bfcache.
+      In this case, old DOM, classes and JS listeners may already exist.
+    */
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted || getNavigationType() === 'back_forward') {
+            forceCleanReload('pageshow browser history restore');
+        }
+    });
+
+    /*
+      Before the browser snapshots the page into bfcache, wipe the injected
+      personalization. This reduces the chance of returning to dirty DOM.
+    */
+    window.addEventListener('pagehide', function() {
+        hardWipeDom('pagehide before browser cache snapshot');
+    });
+
+    /* =========================================================
+       2. ELIGIBILITY GUARD
+
+       Nothing changes on the page unless target_audience=branded_search
+       is present in the URL.
+    ========================================================= */
+
+    var params = new URLSearchParams(window.location.search);
+    var targetAudience = params.get('target_audience');
+
+    if (targetAudience !== 'branded_search') {
+        console.log('[branded_search personalization] Not eligible:', targetAudience);
+        return;
+    }
+
+    console.log('[branded_search personalization] Eligible. Running.');
+
+    /* =========================================================
+       3. SINGLE-RUN GUARD
+       Prevents duplicate insertion if Target/custom code runs twice.
+    ========================================================= */
+
+    if (window.__gsiBrandedSearchPersonalizationLoaded) {
+        console.log('[branded_search personalization] Already loaded. Skipping.');
+        return;
+    }
+
+    window.__gsiBrandedSearchPersonalizationLoaded = true;
+
+    if (document.body) {
+        document.body.classList.add('gsi-branded-search-active');
+    }
+
+    /* =========================================================
+       4. CSS
+       Injected only after eligibility passes.
+
+       Important:
+       The original code globally hid .gsi-nav-search on desktop.
+       That selector matches the production nav search element involved
+       in this bug.
+
+       This version still hides the nav, but only while the
+       personalization is actively running.
+    ========================================================= */
+
+    function injectStyles() {
+        if (document.getElementById(STYLE_ID)) return;
+
+        var style = document.createElement('style');
+        style.id = STYLE_ID;
+        style.type = 'text/css';
+
+        style.textContent =
+            '.gsi-branded-search-active.gsi-nav-search-hidden #gsiNavSearchForm { ' +
+            'opacity: 0 !important; ' +
+            'visibility: hidden !important; ' +
+            'pointer-events: none !important; ' +
+            '} ' +
+
+            '.gsi-branded-search-active.gsi-nav-search-visible #gsiNavSearchForm { ' +
+            'opacity: 1 !important; ' +
+            'visibility: visible !important; ' +
+            'pointer-events: auto !important; ' +
+            '} ' +
+
+            '@media only screen and (min-width: 767.98px) { ' +
+            '.gsi-branded-search-active .gsi-nav-search { ' +
+            'display: none !important; ' +
+            '} ' +
+            '} ' +
+
+            '.gsi-branded-search-active .gsi-school-search--hero { ' +
+            'padding-left: 0 !important; ' +
+            '} ' +
+
+            '.gsi-branded-search-active .gsi-school-search__form-group-hero { ' +
+            'max-width: 33rem !important; ' +
+            '} ' +
+
+            '.gsi-branded-search-active .hero-search-label { ' +
+            'margin-bottom: 0; ' +
+            '} ' +
+
+            '.gsi-branded-search-active .gsi-school-search__current-location-hero { ' +
+            'color: #FFF !important; ' +
+            '} ' +
+
+            '.gsi-branded-search-active .gsi-school-search__form-hero { ' +
+            'align-items: baseline; ' +
+            '} ' +
+
+            '.gsi-branded-search-active .hero-search-bottom-text { ' +
+            'margin-top: 10px; ' +
+            '} ' +
+
+            '@media only screen and (max-width: 550px) { ' +
+            '.gsi-branded-search-active .hero-search-label { ' +
+            'display: none; ' +
+            '} ' +
+            '}';
+
+        document.head.appendChild(style);
+    }
+
+    injectStyles();
+
+    /* =========================================================
+       5. SHARED WAITFOR HELPER
+    ========================================================= */
+
+    function waitFor(selector, cb, timeout) {
+        timeout = timeout || 8000;
+        var start = Date.now();
+
+        function check() {
+            var el = document.querySelector(selector);
+
+            if (el) return cb(el);
+
+            if (Date.now() - start > timeout) {
+                console.warn('[branded_search personalization] Timed out waiting for:', selector);
+                return;
             }
 
-            check();
+            requestAnimationFrame(check);
         }
 
-        /* =========================================================
-           5. HERO FORM INSERTION + FUNCTIONALITY
-           This is your first JS set.
-        ========================================================= */
+        check();
+    }
 
-        function insertAndInitHeroForm() {
-            var MAPBOX_TOKEN = 'pk.eyJ1IjoiZ29kZGFyZHN5c3RlbXMiLCJhIjoiY2txMTVzMDRrMGJtOTJvcWw1eHR3YjJmeCJ9.8K10lWLOj0X6wtHVCHIMlw';
+    /* =========================================================
+       6. HERO FORM INSERTION + FUNCTIONALITY
+    ========================================================= */
 
-            var headerSearch = `
+    function insertAndInitHeroForm() {
+        var MAPBOX_TOKEN = 'pk.eyJ1IjoiZ29kZGFyZHN5c3RlbXMiLCJhIjoiY2txMTVzMDRrMGJtOTJvcWw1eHR3YjJmeCJ9.8K10lWLOj0X6wtHVCHIMlw';
+
+        var headerSearch = `
 <div class="gsi-school-search gsi-school-search--hero">
     <form class="gsi-school-search__form-hero" id="gsiSchoolLocatorWidgetFormHero" novalidate>
         <div class="form-group gsi-school-search__form-group gsi-school-search__form-group-hero">
@@ -189,278 +333,282 @@
 </div>
 `;
 
-            waitFor('.cmp-teaser__description', function(teaserDescription) {
-                if (document.querySelector('.gsi-school-search--hero')) {
-                    console.log('[branded_search personalization] Hero form already exists. Skipping insert.');
-                    return;
-                }
-
-                teaserDescription.insertAdjacentHTML('afterend', headerSearch);
-                console.log('[branded_search personalization] Hero form inserted.');
-
-                initHeroForm();
-                initStickyNav();
-            });
-
-            function initHeroForm() {
-                var heroForm = document.getElementById('gsiSchoolLocatorWidgetFormHero');
-                var heroInput = document.getElementById('gsiSchoolLocatorWidgetInputHero');
-                var heroDropdown = document.getElementById('gsiSchoolLocatorWidgetAutocompleteHero');
-
-                if (!heroForm || !heroInput || !heroDropdown) {
-                    console.warn('[branded_search personalization] Hero form elements missing.');
-                    return;
-                }
-
-                var heroLocationBtn = heroForm.querySelector('.gsi-school-search__current-location');
-
-                var debounceTimer;
-                var activeIndex = -1;
-                var currentSuggestions = [];
-                var abortController = null;
-
-                heroInput.addEventListener('input', function() {
-                    clearTimeout(debounceTimer);
-
-                    var value = heroInput.value.trim();
-
-                    if (value.length < 3) {
-                        hideDropdown();
-                        return;
-                    }
-
-                    debounceTimer = setTimeout(function() {
-                        fetchSuggestions(value);
-                    }, 200);
-                });
-
-                heroInput.addEventListener('keydown', function(e) {
-                    if (heroDropdown.style.display === 'none') return;
-
-                    if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        activeIndex = Math.min(activeIndex + 1, currentSuggestions.length - 1);
-                        updateActive();
-                    } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        activeIndex = Math.max(activeIndex - 1, 0);
-                        updateActive();
-                    } else if (e.key === 'Enter' && activeIndex >= 0) {
-                        e.preventDefault();
-                        selectSuggestion(currentSuggestions[activeIndex]);
-                    } else if (e.key === 'Escape') {
-                        hideDropdown();
-                    }
-                });
-
-                document.addEventListener('click', function(e) {
-                    if (!heroForm.contains(e.target)) hideDropdown();
-                });
-
-                heroForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    if (currentSuggestions.length > 0) {
-                        selectSuggestion(currentSuggestions[activeIndex >= 0 ? activeIndex : 0]);
-                    }
-                });
-
-                if (heroLocationBtn) {
-                    heroLocationBtn.addEventListener('click', function() {
-                        if (!navigator.geolocation) return;
-
-                        navigator.geolocation.getCurrentPosition(
-                            function(pos) {
-                                window.location.href =
-                                    '/school-locator?lat=' + pos.coords.latitude +
-                                    '&lng=' + pos.coords.longitude +
-                                    '&term=' + encodeURIComponent('Current Location');
-                            },
-                            function(err) {
-                                console.warn('[branded_search personalization] Geolocation failed:', err);
-                            }
-                        );
-                    });
-                }
-
-                function fetchSuggestions(query) {
-                    if (abortController) abortController.abort();
-
-                    abortController = new AbortController();
-
-                    var url =
-                        'https://api.mapbox.com/geocoding/v5/mapbox.places/' +
-                        encodeURIComponent(query) +
-                        '.json?country=US&limit=5&access_token=' +
-                        MAPBOX_TOKEN;
-
-                    fetch(url, {
-                            signal: abortController.signal
-                        })
-                        .then(function(res) {
-                            return res.json();
-                        })
-                        .then(function(data) {
-                            if (!data.features || data.features.length === 0) {
-                                hideDropdown();
-                                return;
-                            }
-
-                            currentSuggestions = data.features;
-                            renderDropdown(data.features);
-                        })
-                        .catch(function(err) {
-                            if (err.name !== 'AbortError') {
-                                console.warn('[branded_search personalization] Mapbox error:', err);
-                            }
-                        });
-                }
-
-                function renderDropdown(features) {
-                    var html = '';
-
-                    for (var i = 0; i < features.length; i++) {
-                        html +=
-                            '<li class="gsi-search-suggestions__item" data-index="' + i + '">' +
-                            '<a href="#" class="dropdown-item">' + features[i].place_name + '</a>' +
-                            '</li>';
-                    }
-
-                    heroDropdown.innerHTML = html;
-                    heroDropdown.style.display = 'block';
-                    activeIndex = -1;
-
-                    var items = heroDropdown.querySelectorAll('li');
-
-                    for (var j = 0; j < items.length; j++) {
-                        (function(li) {
-                            li.addEventListener('mousedown', function(e) {
-                                e.preventDefault();
-
-                                var idx = parseInt(li.dataset.index, 10);
-                                selectSuggestion(currentSuggestions[idx]);
-                            });
-                        })(items[j]);
-                    }
-                }
-
-                function updateActive() {
-                    var items = heroDropdown.querySelectorAll('li');
-
-                    for (var i = 0; i < items.length; i++) {
-                        items[i].classList.toggle('active', i === activeIndex);
-                    }
-                }
-
-                function hideDropdown() {
-                    heroDropdown.style.display = 'none';
-                    currentSuggestions = [];
-                    activeIndex = -1;
-                }
-
-                function selectSuggestion(feature) {
-                    if (!feature) return;
-
-                    var lng = feature.center[0];
-                    var lat = feature.center[1];
-
-                    var url =
-                        '/school-locator?lat=' + lat +
-                        '&lng=' + lng +
-                        '&term=' + encodeURIComponent(feature.place_name);
-
-                    window.location.href = url;
-                }
-
-                console.log('[branded_search personalization] Hero form initialized.');
+        waitFor('.cmp-teaser__description', function(teaserDescription) {
+            if (document.querySelector('.gsi-school-search--hero')) {
+                console.log('[branded_search personalization] Hero form already exists. Skipping insert.');
+                return;
             }
-        }
 
-        /* =========================================================
-           6. STICKY NAV BEHAVIOR
-           This is your second JS set.
-        ========================================================= */
+            teaserDescription.insertAdjacentHTML('afterend', headerSearch);
+            console.log('[branded_search personalization] Hero form inserted.');
 
-        function initStickyNav() {
-            waitFor('#gsiSchoolLocatorWidgetFormHero', function(heroForm) {
-                var navForm = document.getElementById('gsiNavSearchForm');
+            initHeroForm();
+            initStickyNav();
+        });
 
-                if (!navForm) {
-                    console.warn('[branded_search personalization] Nav form not found.');
+        function initHeroForm() {
+            var heroForm = document.getElementById('gsiSchoolLocatorWidgetFormHero');
+            var heroInput = document.getElementById('gsiSchoolLocatorWidgetInputHero');
+            var heroDropdown = document.getElementById('gsiSchoolLocatorWidgetAutocompleteHero');
+
+            if (!heroForm || !heroInput || !heroDropdown) {
+                console.warn('[branded_search personalization] Hero form elements missing.');
+                return;
+            }
+
+            var heroLocationBtn = heroForm.querySelector('.gsi-school-search__current-location');
+
+            var debounceTimer;
+            var activeIndex = -1;
+            var currentSuggestions = [];
+            var abortController = null;
+
+            heroInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+
+                var value = heroInput.value.trim();
+
+                if (value.length < 3) {
+                    hideDropdown();
                     return;
                 }
 
-                if (window.__gsiBrandedSearchStickyNavLoaded) {
-                    console.log('[branded_search personalization] Sticky nav already initialized. Skipping.');
-                    return;
-                }
-
-                window.__gsiBrandedSearchStickyNavLoaded = true;
-
-                var root = document.body;
-                var lastScrollY = window.pageYOffset;
-
-                function setHidden() {
-                    root.classList.add('gsi-nav-search-hidden');
-                    root.classList.remove('gsi-nav-search-visible');
-                }
-
-                function setVisible() {
-                    root.classList.remove('gsi-nav-search-hidden');
-                    root.classList.add('gsi-nav-search-visible');
-                }
-
-                function update() {
-                    var currentY = window.pageYOffset;
-                    var rect = heroForm.getBoundingClientRect();
-                    var scrolledPast = rect.bottom <= 0;
-
-                    var delta = currentY - lastScrollY;
-                    var scrollingUp = delta < -2;
-                    var scrollingDown = delta > 2;
-
-                    if (!scrolledPast) {
-                        setHidden();
-                    } else if (scrollingUp) {
-                        setVisible();
-                    } else if (scrollingDown) {
-                        setHidden();
-                    }
-
-                    lastScrollY = currentY;
-                }
-
-                var ticking = false;
-
-                function onScroll() {
-                    if (!ticking) {
-                        window.requestAnimationFrame(function() {
-                            update();
-                            ticking = false;
-                        });
-
-                        ticking = true;
-                    }
-                }
-
-                update();
-
-                window.addEventListener('scroll', onScroll, {
-                    passive: true
-                });
-                window.addEventListener('resize', onScroll, {
-                    passive: true
-                });
-
-                console.log('[branded_search personalization] Sticky nav initialized.');
+                debounceTimer = setTimeout(function() {
+                    fetchSuggestions(value);
+                }, 200);
             });
+
+            heroInput.addEventListener('keydown', function(e) {
+                if (heroDropdown.style.display === 'none') return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = Math.min(activeIndex + 1, currentSuggestions.length - 1);
+                    updateActive();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIndex = Math.max(activeIndex - 1, 0);
+                    updateActive();
+                } else if (e.key === 'Enter' && activeIndex >= 0) {
+                    e.preventDefault();
+                    selectSuggestion(currentSuggestions[activeIndex]);
+                } else if (e.key === 'Escape') {
+                    hideDropdown();
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!heroForm.contains(e.target)) hideDropdown();
+            });
+
+            heroForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (currentSuggestions.length > 0) {
+                    selectSuggestion(currentSuggestions[activeIndex >= 0 ? activeIndex : 0]);
+                }
+            });
+
+            if (heroLocationBtn) {
+                heroLocationBtn.addEventListener('click', function() {
+                    if (!navigator.geolocation) return;
+
+                    navigator.geolocation.getCurrentPosition(
+                        function(pos) {
+                            hardWipeDom('before hero current location navigation');
+
+                            window.location.href =
+                                '/school-locator?lat=' + pos.coords.latitude +
+                                '&lng=' + pos.coords.longitude +
+                                '&term=' + encodeURIComponent('Current Location');
+                        },
+                        function(err) {
+                            console.warn('[branded_search personalization] Geolocation failed:', err);
+                        }
+                    );
+                });
+            }
+
+            function fetchSuggestions(query) {
+                if (abortController) abortController.abort();
+
+                abortController = new AbortController();
+
+                var url =
+                    'https://api.mapbox.com/geocoding/v5/mapbox.places/' +
+                    encodeURIComponent(query) +
+                    '.json?country=US&limit=5&access_token=' +
+                    MAPBOX_TOKEN;
+
+                fetch(url, {
+                    signal: abortController.signal
+                })
+                    .then(function(res) {
+                        return res.json();
+                    })
+                    .then(function(data) {
+                        if (!data.features || data.features.length === 0) {
+                            hideDropdown();
+                            return;
+                        }
+
+                        currentSuggestions = data.features;
+                        renderDropdown(data.features);
+                    })
+                    .catch(function(err) {
+                        if (err.name !== 'AbortError') {
+                            console.warn('[branded_search personalization] Mapbox error:', err);
+                        }
+                    });
+            }
+
+            function renderDropdown(features) {
+                var html = '';
+
+                for (var i = 0; i < features.length; i++) {
+                    html +=
+                        '<li class="gsi-search-suggestions__item" data-index="' + i + '">' +
+                        '<a href="#" class="dropdown-item">' + features[i].place_name + '</a>' +
+                        '</li>';
+                }
+
+                heroDropdown.innerHTML = html;
+                heroDropdown.style.display = 'block';
+                activeIndex = -1;
+
+                var items = heroDropdown.querySelectorAll('li');
+
+                for (var j = 0; j < items.length; j++) {
+                    (function(li) {
+                        li.addEventListener('mousedown', function(e) {
+                            e.preventDefault();
+
+                            var idx = parseInt(li.dataset.index, 10);
+                            selectSuggestion(currentSuggestions[idx]);
+                        });
+                    })(items[j]);
+                }
+            }
+
+            function updateActive() {
+                var items = heroDropdown.querySelectorAll('li');
+
+                for (var i = 0; i < items.length; i++) {
+                    items[i].classList.toggle('active', i === activeIndex);
+                }
+            }
+
+            function hideDropdown() {
+                heroDropdown.style.display = 'none';
+                currentSuggestions = [];
+                activeIndex = -1;
+            }
+
+            function selectSuggestion(feature) {
+                if (!feature) return;
+
+                var lng = feature.center[0];
+                var lat = feature.center[1];
+
+                hardWipeDom('before hero selected suggestion navigation');
+
+                var url =
+                    '/school-locator?lat=' + lat +
+                    '&lng=' + lng +
+                    '&term=' + encodeURIComponent(feature.place_name);
+
+                window.location.href = url;
+            }
+
+            console.log('[branded_search personalization] Hero form initialized.');
         }
+    }
 
-        /* =========================================================
-           7. START EXPERIENCE
-        ========================================================= */
+    /* =========================================================
+       7. STICKY NAV BEHAVIOR
+    ========================================================= */
 
-        insertAndInitHeroForm();
+    function initStickyNav() {
+        waitFor('#gsiSchoolLocatorWidgetFormHero', function(heroForm) {
+            var navForm = document.getElementById('gsiNavSearchForm');
 
-    })();
+            if (!navForm) {
+                console.warn('[branded_search personalization] Nav form not found.');
+                return;
+            }
+
+            if (window.__gsiBrandedSearchStickyNavLoaded) {
+                console.log('[branded_search personalization] Sticky nav already initialized. Skipping.');
+                return;
+            }
+
+            window.__gsiBrandedSearchStickyNavLoaded = true;
+
+            var root = document.body;
+            var lastScrollY = window.pageYOffset;
+
+            function setHidden() {
+                root.classList.add('gsi-nav-search-hidden');
+                root.classList.remove('gsi-nav-search-visible');
+            }
+
+            function setVisible() {
+                root.classList.remove('gsi-nav-search-hidden');
+                root.classList.add('gsi-nav-search-visible');
+            }
+
+            function update() {
+                var currentY = window.pageYOffset;
+                var rect = heroForm.getBoundingClientRect();
+                var scrolledPast = rect.bottom <= 0;
+
+                var delta = currentY - lastScrollY;
+                var scrollingUp = delta < -2;
+                var scrollingDown = delta > 2;
+
+                if (!scrolledPast) {
+                    setHidden();
+                } else if (scrollingUp) {
+                    setVisible();
+                } else if (scrollingDown) {
+                    setHidden();
+                }
+
+                lastScrollY = currentY;
+            }
+
+            var ticking = false;
+
+            function onScroll() {
+                if (!ticking) {
+                    window.requestAnimationFrame(function() {
+                        update();
+                        ticking = false;
+                    });
+
+                    ticking = true;
+                }
+            }
+
+            update();
+
+            window.addEventListener('scroll', onScroll, {
+                passive: true
+            });
+
+            window.addEventListener('resize', onScroll, {
+                passive: true
+            });
+
+            console.log('[branded_search personalization] Sticky nav initialized.');
+        });
+    }
+
+    /* =========================================================
+       8. START EXPERIENCE
+    ========================================================= */
+
+    insertAndInitHeroForm();
+
+})();
 </script>
