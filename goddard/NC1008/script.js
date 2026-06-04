@@ -3,17 +3,14 @@
     /* =========================================================
        1. NUCLEAR BFCACHE / BACK-BUTTON GUARD
 
-       This guard does NOT use sessionStorage.
-
        If the personalized Homepage is restored through browser
-       back/forward, do not try to repair the cached page in place.
+       back/forward, force a full fresh reload directly back into
+       the personalized URL.
 
-       Instead:
-       - Remove injected DOM
-       - Remove injected CSS
-       - Remove personalization body classes
-       - Reset personalization window flags
-       - Replace the page with the clean Homepage URL
+       Important:
+       Do NOT first reload to a clean URL without target_audience.
+       If Target only serves this code when target_audience exists,
+       the code will never get another chance to re-add the param.
     ========================================================= */
 
     var STYLE_ID = 'gsi-branded-search-style';
@@ -34,30 +31,18 @@
         return 'navigate';
     }
 
-    function getCleanUrl() {
+    function getFreshPersonalizedUrl() {
+        var params = new URLSearchParams(window.location.search);
+
+        params.set('target_audience', 'branded_search');
+        params.set('gsi_force_refresh', String(Date.now()));
+
         return (
             window.location.origin +
             window.location.pathname +
+            '?' + params.toString() +
             window.location.hash
         );
-    }
-
-    function clearPersonalizationStorage() {
-        try {
-            Object.keys(sessionStorage).forEach(function(key) {
-                if (key.indexOf('gsiBrandedSearch') === 0) {
-                    sessionStorage.removeItem(key);
-                }
-            });
-        } catch (e) {}
-
-        try {
-            Object.keys(localStorage).forEach(function(key) {
-                if (key.indexOf('gsiBrandedSearch') === 0) {
-                    localStorage.removeItem(key);
-                }
-            });
-        } catch (e) {}
     }
 
     function hardWipeDom(reason) {
@@ -85,40 +70,30 @@
 
         window.__gsiBrandedSearchPersonalizationLoaded = false;
         window.__gsiBrandedSearchStickyNavLoaded = false;
-
-        clearPersonalizationStorage();
     }
 
-    function forceCleanReload(reason) {
-        console.log('[branded_search personalization] Forcing clean reload:', reason || 'unknown');
+    function forceFreshPersonalizedReload(reason) {
+        console.log('[branded_search personalization] Forcing fresh personalized reload:', reason || 'unknown');
 
         hardWipeDom(reason);
 
-        var cleanUrl = getCleanUrl();
-
-        if (window.location.href !== cleanUrl) {
-            window.location.replace(cleanUrl);
-        } else {
-            window.location.reload();
-        }
+        window.location.replace(getFreshPersonalizedUrl());
     }
 
     /*
       Handles browsers that do a normal page load on back/forward.
-      This must happen before eligibility and before any DOM changes.
     */
     if (getNavigationType() === 'back_forward') {
-        forceCleanReload('navigation type back_forward');
+        forceFreshPersonalizedReload('navigation type back_forward');
         return;
     }
 
     /*
       Handles browsers that restore the page from bfcache.
-      In this case, old DOM, classes and JS listeners may already exist.
     */
     window.addEventListener('pageshow', function(event) {
         if (event.persisted || getNavigationType() === 'back_forward') {
-            forceCleanReload('pageshow browser history restore');
+            forceFreshPersonalizedReload('pageshow browser history restore');
         }
     });
 
