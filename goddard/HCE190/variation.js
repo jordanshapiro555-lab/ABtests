@@ -1,3 +1,4 @@
+<script>
 (function () {
   var MODULE_ID = "gsi-target-hero-availability";
   var MAX_WAIT_MS = 15000;
@@ -10,33 +11,24 @@
     cardTitleSelector: "h6",
     availabilitySelector: ".gsi-school-classroom-cards__availability",
 
-    /*
-      The comp shows four Hero-level program categories:
-      Infant Daycare, Toddler Daycare, Early Learning Care, Preschool.
-
-      Pre-K is intentionally not shown as its own Hero flag here.
-      To surface Pre-K separately, add:
-      { key: "pre-k", label: "Pre-K", programs: ["pre-k", "pre k"] }
-    */
-    programGroups: [
-      { key: "infant-daycare", label: "Infant Daycare", programs: ["infant"] },
-      { key: "toddler-daycare", label: "Toddler Daycare", programs: ["first steps", "toddlers", "toddler"] },
-      { key: "early-learning-care", label: "Early Learning Care", programs: ["twos", "bridge"] },
-      { key: "preschool", label: "Preschool", programs: ["preschool"] }
-    ],
-
     statusStyles: {
       available: {
         label: "Available",
-        color: "#35A852"
+        background: "#C9F7B7",
+        color: "#006B2E",
+        border: "1px solid #8AD66F"
       },
       limited: {
         label: "Limited",
-        color: "#FFC20E"
+        background: "#FFE77A",
+        color: "#002856",
+        border: "1px solid #E7C94C"
       },
       upcoming: {
         label: "Upcoming",
-        color: "#4F7BFF"
+        background: "#FFE77A",
+        color: "#002856",
+        border: "1px solid #E7C94C"
       }
     }
   };
@@ -57,26 +49,6 @@
       .replace(/\s+/g, " ")
       .trim()
       .toLowerCase();
-  }
-
-  function getProgramGroup(programName) {
-    var normalized = normalizeText(programName);
-
-    for (var i = 0; i < CONFIG.programGroups.length; i += 1) {
-      var group = CONFIG.programGroups[i];
-
-      for (var j = 0; j < group.programs.length; j += 1) {
-        if (normalized === group.programs[j]) {
-          return {
-            key: group.key,
-            label: group.label,
-            order: i
-          };
-        }
-      }
-    }
-
-    return null;
   }
 
   function getAvailabilityStatus(availabilityEl) {
@@ -102,7 +74,8 @@
 
   function collectAvailabilityItems() {
     var cards = document.querySelectorAll(CONFIG.cardSelector);
-    var grouped = {};
+    var seen = {};
+    var items = [];
 
     Array.prototype.forEach.call(cards, function (card) {
       var content = card.querySelector(CONFIG.cardContentSelector);
@@ -114,34 +87,30 @@
       var titleEl = content.querySelector(CONFIG.cardTitleSelector);
       if (!titleEl) return;
 
-      var group = getProgramGroup(titleEl.textContent);
-      if (!group) return;
+      var programName = String(titleEl.textContent || "").replace(/\s+/g, " ").trim();
+      if (!programName) return;
 
       var status = getAvailabilityStatus(availabilityEl);
       if (!status) return;
 
+      var dedupeKey = normalizeText(programName) + ":" + normalizeText(status.label);
+
       /*
-        If multiple classroom cards roll up to the same Hero program,
-        the first available card in page order wins.
+        Prevents duplicate flags if Slick creates cloned cards.
       */
-      if (!grouped[group.key]) {
-        grouped[group.key] = {
-          key: group.key,
-          label: group.label,
-          statusLabel: status.label,
-          dotColor: status.color,
-          order: group.order
-        };
-      }
+      if (seen[dedupeKey]) return;
+      seen[dedupeKey] = true;
+
+      items.push({
+        programName: programName,
+        statusLabel: status.label,
+        badgeBackground: status.background,
+        badgeColor: status.color,
+        badgeBorder: status.border
+      });
     });
 
-    return Object.keys(grouped)
-      .map(function (key) {
-        return grouped[key];
-      })
-      .sort(function (a, b) {
-        return a.order - b.order;
-      });
+    return items;
   }
 
   function createAvailabilityModule(items) {
@@ -152,7 +121,7 @@
       "data-gsi-availability-signature",
       items
         .map(function (item) {
-          return item.key + ":" + item.statusLabel;
+          return item.programName + ":" + item.statusLabel;
         })
         .join("|")
     );
@@ -214,7 +183,7 @@
         "align-items": "center",
         "justify-content": "flex-start",
         "box-sizing": "border-box",
-        "min-height": "24px",
+        "min-height": "26px",
         "margin": "0 24px 10px 0",
         "padding": "0 24px 0 0",
         "border-right": index === items.length - 1 ? "0" : "1px solid rgba(0, 40, 86, 0.22)",
@@ -224,11 +193,11 @@
       });
 
       var program = document.createElement("span");
-      program.textContent = item.label;
+      program.textContent = item.programName;
 
       setImportantStyles(program, {
         "display": "inline-block",
-        "margin": "0",
+        "margin": "0 9px 0 0",
         "padding": "0",
         "color": "#002856",
         "font-family": "'Noto Sans', Arial, sans-serif",
@@ -237,39 +206,31 @@
         "line-height": "1.25"
       });
 
-      var dot = document.createElement("span");
-      dot.setAttribute("aria-hidden", "true");
+      var badge = document.createElement("span");
+      badge.textContent = item.statusLabel.toUpperCase();
 
-      setImportantStyles(dot, {
-        "display": "inline-block",
-        "width": "8px",
-        "height": "8px",
-        "min-width": "8px",
-        "min-height": "8px",
-        "margin": "0 9px",
-        "padding": "0",
-        "border-radius": "999px",
-        "background": item.dotColor,
+      setImportantStyles(badge, {
+        "display": "inline-flex",
+        "align-items": "center",
+        "justify-content": "center",
+        "box-sizing": "border-box",
+        "margin": "0",
+        "padding": "2px 7px 3px 7px",
+        "border-radius": "3px",
+        "background": item.badgeBackground,
+        "border": item.badgeBorder,
+        "color": item.badgeColor,
+        "font-family": "'Noto Sans', Arial, sans-serif",
+        "font-size": "12px",
+        "font-weight": "800",
+        "line-height": "1",
+        "letter-spacing": "0.03em",
+        "text-transform": "uppercase",
         "vertical-align": "middle"
       });
 
-      var status = document.createElement("span");
-      status.textContent = item.statusLabel;
-
-      setImportantStyles(status, {
-        "display": "inline-block",
-        "margin": "0",
-        "padding": "0",
-        "color": "#002856",
-        "font-family": "'Noto Sans', Arial, sans-serif",
-        "font-size": "14px",
-        "font-weight": "700",
-        "line-height": "1.25"
-      });
-
       row.appendChild(program);
-      row.appendChild(dot);
-      row.appendChild(status);
+      row.appendChild(badge);
       list.appendChild(row);
     });
 
@@ -350,7 +311,7 @@
 
     var signature = items
       .map(function (item) {
-        return item.key + ":" + item.statusLabel;
+        return item.programName + ":" + item.statusLabel;
       })
       .join("|");
 
@@ -418,3 +379,4 @@
     init();
   }
 })();
+</script>
