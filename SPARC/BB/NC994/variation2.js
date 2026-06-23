@@ -4,11 +4,11 @@
   var actionUrlAttr = 'data-action-url';
 
   var OVERLAY_ID = 'optly-savedbag-overlay';
-  var SESSION_KEY = 'optly_savedbag_autoshow_v24';
+  var SESSION_KEY = 'optly_savedbag_autoshow_v25';
   var VIEW_BAG_URL = 'https://www.brooksbrothers.com/on/demandware.store/Sites-brooksbrothers-Site/en_US/Cart-Show';
 
   var DESKTOP_MIN_WIDTH = 1024;
-  var INITIAL_EMAIL_WAIT_MS = 1500;
+  var INITIAL_EMAIL_WAIT_MS = 2500;
   var CONFIRM_CLOSED_MS = 500;
   var AFTER_EMAIL_CLOSE_DELAY_MS = 1500;
   var POLL_MS = 150;
@@ -16,6 +16,7 @@
   var started = false;
   var flowStarted = false;
   var emailWasSeen = false;
+  var closedByEmailCapture = false;
   var waitStartedAt = 0;
   var resizeTimer = null;
   var pollTimer = null;
@@ -54,6 +55,12 @@
   function markShown() {
     try {
       sessionStorage.setItem(SESSION_KEY, '1');
+    } catch (e) {}
+  }
+
+  function unmarkShown() {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
     } catch (e) {}
   }
 
@@ -225,12 +232,16 @@
     wrap.addEventListener('click', function (e) {
       if (e.target && e.target.closest('[data-optly-close], .minicart__continue, [data-toggle-close]')) {
         e.preventDefault();
+        closedByEmailCapture = false;
         closeOverlay();
       }
     }, true);
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeOverlay();
+      if (e.key === 'Escape') {
+        closedByEmailCapture = false;
+        closeOverlay();
+      }
     });
 
     return wrap;
@@ -252,6 +263,12 @@
     wrap.style.opacity = '';
 
     syncOverlayContainer();
+  }
+
+  function closeOverlayForEmailCapture() {
+    closedByEmailCapture = true;
+    closeOverlay();
+    unmarkShown();
   }
 
   function getSavedBagItemCount(root) {
@@ -407,7 +424,7 @@
   function renderHTML(html) {
     if (isEmailCaptureVisible()) {
       emailWasSeen = true;
-      closeOverlay();
+      closeOverlayForEmailCapture();
       waitThenOpen();
       return;
     }
@@ -442,7 +459,7 @@
 
     if (isEmailCaptureVisible()) {
       emailWasSeen = true;
-      closeOverlay();
+      closeOverlayForEmailCapture();
       waitThenOpen();
       return;
     }
@@ -481,7 +498,7 @@
 
     if (isEmailCaptureVisible()) {
       emailWasSeen = true;
-      closeOverlay();
+      closeOverlayForEmailCapture();
       waitThenOpen();
       return;
     }
@@ -497,19 +514,20 @@
     requestAnimationFrame(function () {
       if (isEmailCaptureVisible()) {
         emailWasSeen = true;
-        closeOverlay();
+        closeOverlayForEmailCapture();
         waitThenOpen();
         return;
       }
 
       markShown();
+      closedByEmailCapture = false;
       wrap.classList.add('optly-open');
       syncOverlayContainer();
 
       requestAnimationFrame(function () {
         if (isEmailCaptureVisible()) {
           emailWasSeen = true;
-          closeOverlay();
+          closeOverlayForEmailCapture();
           waitThenOpen();
           return;
         }
@@ -529,7 +547,7 @@
 
       if (isEmailCaptureVisible()) {
         emailWasSeen = true;
-        closeOverlay();
+        closeOverlayForEmailCapture();
         pollTimer = setTimeout(poll, POLL_MS);
         return;
       }
@@ -541,7 +559,12 @@
             return;
           }
 
-          delayTimer = setTimeout(openOverlay, AFTER_EMAIL_CLOSE_DELAY_MS);
+          delayTimer = setTimeout(function () {
+            if (!closedByEmailCapture) return;
+
+            closedByEmailCapture = false;
+            openOverlay();
+          }, AFTER_EMAIL_CLOSE_DELAY_MS);
         }, CONFIRM_CLOSED_MS);
 
         return;
@@ -561,6 +584,7 @@
 
     flowStarted = true;
     emailWasSeen = false;
+    closedByEmailCapture = false;
     waitStartedAt = Date.now();
 
     waitThenOpen();
@@ -576,7 +600,7 @@
 
       if (isEmailCaptureVisible()) {
         emailWasSeen = true;
-        closeOverlay();
+        closeOverlayForEmailCapture();
         waitThenOpen();
       }
     });
@@ -600,7 +624,7 @@
 
       if (isEmailCaptureVisible()) {
         emailWasSeen = true;
-        closeOverlay();
+        closeOverlayForEmailCapture();
         waitThenOpen();
         return;
       }
@@ -618,7 +642,7 @@
 
     if (isEmailCaptureVisible()) {
       emailWasSeen = true;
-      closeOverlay();
+      closeOverlayForEmailCapture();
       waitThenOpen();
       return;
     }
