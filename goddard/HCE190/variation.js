@@ -5,11 +5,19 @@
   var RENDER_DEBOUNCE_MS = 75;
 
   var CONFIG = {
-    heroInsertAfterSelector: ".gsi-school-hero__programs-and-recognitions",
+    heroRowSelector: ".gsi-school-hero__row",
+    heroColOneSelector: ".gsi-school-hero__col-1",
+    heroDefaultInsertAfterSelector: ".gsi-school-hero__programs-and-recognitions",
     cardSelector: ".gsi-image-card",
     cardContentSelector: ".gsi-image-card__content",
     cardTitleSelector: "h6",
     availabilitySelector: ".gsi-school-classroom-cards__availability",
+
+    statusPriority: {
+      available: 3,
+      limited: 2,
+      upcoming: 1
+    },
 
     statusStyles: {
       available: {
@@ -21,13 +29,13 @@
       limited: {
         label: "Limited",
         background: "#FFE77A",
-        color: "#002856",
+        color: "#8A6500",
         border: "1px solid #E7C94C"
       },
       upcoming: {
         label: "Upcoming",
         background: "#FFE77A",
-        color: "#002856",
+        color: "#8A6500",
         border: "1px solid #E7C94C"
       }
     }
@@ -51,22 +59,72 @@
       .toLowerCase();
   }
 
-  function getAvailabilityStatus(availabilityEl) {
+  function getDisplayProgram(programName) {
+    var normalized = normalizeText(programName);
+
+    if (normalized === "first steps" || normalized === "toddlers" || normalized === "toddler") {
+      return {
+        key: "toddlers",
+        label: "Toddlers",
+        order: 2
+      };
+    }
+
+    if (normalized === "twos" || normalized === "bridge") {
+      return {
+        key: "early-learning",
+        label: "Early Learning",
+        order: 3
+      };
+    }
+
+    if (normalized === "infant") {
+      return {
+        key: "infant",
+        label: "Infant",
+        order: 1
+      };
+    }
+
+    if (normalized === "preschool") {
+      return {
+        key: "preschool",
+        label: "Preschool",
+        order: 4
+      };
+    }
+
+    if (normalized === "pre-k" || normalized === "pre k" || normalized === "prek") {
+      return {
+        key: "pre-k",
+        label: "Pre-K",
+        order: 5
+      };
+    }
+
+    return {
+      key: normalized,
+      label: String(programName || "").replace(/\s+/g, " ").trim(),
+      order: 99
+    };
+  }
+
+  function getAvailabilityKey(availabilityEl) {
     if (!availabilityEl) return null;
 
     var classText = normalizeText(availabilityEl.className);
     var text = normalizeText(availabilityEl.textContent);
 
     if (classText.indexOf("available") > -1 || text === "available") {
-      return CONFIG.statusStyles.available;
+      return "available";
     }
 
     if (classText.indexOf("limited") > -1 || text === "limited") {
-      return CONFIG.statusStyles.limited;
+      return "limited";
     }
 
     if (classText.indexOf("upcoming") > -1 || text === "upcoming") {
-      return CONFIG.statusStyles.upcoming;
+      return "upcoming";
     }
 
     return null;
@@ -74,8 +132,7 @@
 
   function collectAvailabilityItems() {
     var cards = document.querySelectorAll(CONFIG.cardSelector);
-    var seen = {};
-    var items = [];
+    var grouped = {};
 
     Array.prototype.forEach.call(cards, function (card) {
       var content = card.querySelector(CONFIG.cardContentSelector);
@@ -87,44 +144,63 @@
       var titleEl = content.querySelector(CONFIG.cardTitleSelector);
       if (!titleEl) return;
 
-      var programName = String(titleEl.textContent || "").replace(/\s+/g, " ").trim();
-      if (!programName) return;
+      var rawProgramName = String(titleEl.textContent || "").replace(/\s+/g, " ").trim();
+      if (!rawProgramName) return;
 
-      var status = getAvailabilityStatus(availabilityEl);
-      if (!status) return;
+      var displayProgram = getDisplayProgram(rawProgramName);
+      if (!displayProgram || !displayProgram.label) return;
 
-      var dedupeKey = normalizeText(programName) + ":" + normalizeText(status.label);
+      var statusKey = getAvailabilityKey(availabilityEl);
+      if (!statusKey || !CONFIG.statusStyles[statusKey]) return;
+
+      var status = CONFIG.statusStyles[statusKey];
+      var priority = CONFIG.statusPriority[statusKey] || 0;
 
       /*
-        Prevents duplicate flags if Slick creates cloned cards.
-      */
-      if (seen[dedupeKey]) return;
-      seen[dedupeKey] = true;
+        For paired programs:
+        - First Steps + Toddlers show as Toddlers
+        - Twos + Bridge show as Early Learning
 
-      items.push({
-        programName: programName,
-        statusLabel: status.label,
-        badgeBackground: status.background,
-        badgeColor: status.color,
-        badgeBorder: status.border
-      });
+        If values differ, priority is:
+        Available > Limited > Upcoming
+      */
+      if (!grouped[displayProgram.key] || priority > grouped[displayProgram.key].priority) {
+        grouped[displayProgram.key] = {
+          key: displayProgram.key,
+          programName: displayProgram.label,
+          statusKey: statusKey,
+          statusLabel: status.label,
+          badgeBackground: status.background,
+          badgeColor: status.color,
+          badgeBorder: status.border,
+          order: displayProgram.order,
+          priority: priority
+        };
+      }
     });
 
-    return items;
+    return Object.keys(grouped)
+      .map(function (key) {
+        return grouped[key];
+      })
+      .sort(function (a, b) {
+        return a.order - b.order;
+      });
+  }
+
+  function getSignature(items) {
+    return items
+      .map(function (item) {
+        return item.key + ":" + item.statusKey;
+      })
+      .join("|");
   }
 
   function createAvailabilityModule(items) {
     var root = document.createElement("section");
     root.id = MODULE_ID;
     root.setAttribute("aria-label", "Availability by program");
-    root.setAttribute(
-      "data-gsi-availability-signature",
-      items
-        .map(function (item) {
-          return item.programName + ":" + item.statusLabel;
-        })
-        .join("|")
-    );
+    root.setAttribute("data-gsi-availability-signature", getSignature(items));
 
     setImportantStyles(root, {
       "display": "block",
@@ -240,23 +316,139 @@
     return root;
   }
 
+  function placeModule(root) {
+    if (!root) return;
+
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    var heroRow = document.querySelector(CONFIG.heroRowSelector);
+    var heroColOne = document.querySelector(CONFIG.heroColOneSelector);
+    var defaultInsertAfter = document.querySelector(CONFIG.heroDefaultInsertAfterSelector);
+
+    if (viewportWidth >= 1185 && viewportWidth <= 1297 && heroRow && heroRow.parentNode) {
+      heroRow.parentNode.insertBefore(root, heroRow.nextSibling);
+      root.setAttribute("data-gsi-placement", "below-row");
+      return;
+    }
+
+    if (viewportWidth >= 840 && viewportWidth <= 1184 && heroColOne) {
+      heroColOne.appendChild(root);
+      root.setAttribute("data-gsi-placement", "right-of-col-one");
+      return;
+    }
+
+    if (defaultInsertAfter && defaultInsertAfter.parentNode) {
+      defaultInsertAfter.parentNode.insertBefore(root, defaultInsertAfter.nextSibling);
+      root.setAttribute("data-gsi-placement", "default");
+    }
+  }
+
   function applyResponsiveStyles() {
     var root = document.getElementById(MODULE_ID);
     if (!root) return;
 
-    var isMobile = window.matchMedia("(max-width: 767px)").matches;
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    var isMobile = viewportWidth < 768;
+    var isTabletRight = viewportWidth >= 840 && viewportWidth <= 1184;
+    var isBelowRow = viewportWidth >= 1185 && viewportWidth <= 1297;
+
+    var heroColOne = document.querySelector(CONFIG.heroColOneSelector);
     var list = root.querySelector("[data-gsi-availability-list]");
     var items = root.querySelectorAll("[data-gsi-availability-item]");
 
-    if (isMobile) {
+    placeModule(root);
+
+    if (heroColOne && isTabletRight) {
+      setImportantStyles(heroColOne, {
+        "position": "relative"
+      });
+    }
+
+    if (isTabletRight) {
       setImportantStyles(root, {
-        "margin": "24px 0 0 0",
-        "padding": "0"
+        "position": "absolute",
+        "top": "32px",
+        "right": "24px",
+        "width": "43%",
+        "max-width": "520px",
+        "margin": "0",
+        "padding": "0",
+        "z-index": "2"
       });
 
       if (list) {
         setImportantStyles(list, {
           "display": "flex",
+          "flex-direction": "column",
+          "align-items": "flex-start",
+          "justify-content": "flex-start",
+          "flex-wrap": "nowrap",
+          "gap": "10px"
+        });
+      }
+
+      Array.prototype.forEach.call(items, function (item) {
+        setImportantStyles(item, {
+          "margin": "0",
+          "padding": "0",
+          "border-right": "0",
+          "white-space": "nowrap"
+        });
+      });
+
+      return;
+    }
+
+    if (isBelowRow) {
+      setImportantStyles(root, {
+        "position": "relative",
+        "top": "auto",
+        "right": "auto",
+        "width": "auto",
+        "max-width": "none",
+        "margin": "18px 48px 0 48px",
+        "padding": "0",
+        "z-index": "1"
+      });
+
+      if (list) {
+        setImportantStyles(list, {
+          "display": "flex",
+          "flex-direction": "row",
+          "align-items": "center",
+          "justify-content": "flex-start",
+          "flex-wrap": "wrap",
+          "gap": "0"
+        });
+      }
+
+      Array.prototype.forEach.call(items, function (item, index) {
+        setImportantStyles(item, {
+          "margin": "0 24px 10px 0",
+          "padding": "0 24px 0 0",
+          "border-right": index === items.length - 1 ? "0" : "1px solid rgba(0, 40, 86, 0.22)",
+          "white-space": "nowrap"
+        });
+      });
+
+      return;
+    }
+
+    if (isMobile) {
+      setImportantStyles(root, {
+        "position": "relative",
+        "top": "auto",
+        "right": "auto",
+        "width": "100%",
+        "max-width": "100%",
+        "margin": "24px 0 0 0",
+        "padding": "0",
+        "z-index": "1"
+      });
+
+      if (list) {
+        setImportantStyles(list, {
+          "display": "flex",
+          "flex-direction": "row",
           "flex-wrap": "wrap",
           "align-items": "center",
           "justify-content": "flex-start",
@@ -273,31 +465,48 @@
           "white-space": "nowrap"
         });
       });
-    } else {
-      if (list) {
-        setImportantStyles(list, {
-          "display": "flex",
-          "flex-wrap": "wrap",
-          "align-items": "center",
-          "justify-content": "flex-start",
-          "gap": "0"
-        });
-      }
 
-      Array.prototype.forEach.call(items, function (item, index) {
-        setImportantStyles(item, {
-          "margin": "0 24px 10px 0",
-          "padding": "0 24px 0 0",
-          "border-right": index === items.length - 1 ? "0" : "1px solid rgba(0, 40, 86, 0.22)",
-          "white-space": "nowrap"
-        });
+      return;
+    }
+
+    setImportantStyles(root, {
+      "position": "relative",
+      "top": "auto",
+      "right": "auto",
+      "width": "100%",
+      "max-width": "100%",
+      "margin": "26px 0 0 0",
+      "padding": "0",
+      "z-index": "1"
+    });
+
+    if (list) {
+      setImportantStyles(list, {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "wrap",
+        "align-items": "center",
+        "justify-content": "flex-start",
+        "gap": "0"
       });
     }
+
+    Array.prototype.forEach.call(items, function (item, index) {
+      setImportantStyles(item, {
+        "margin": "0 24px 10px 0",
+        "padding": "0 24px 0 0",
+        "border-right": index === items.length - 1 ? "0" : "1px solid rgba(0, 40, 86, 0.22)",
+        "white-space": "nowrap"
+      });
+    });
   }
 
   function renderAvailabilityModule() {
-    var insertAfterEl = document.querySelector(CONFIG.heroInsertAfterSelector);
-    if (!insertAfterEl) return false;
+    var defaultInsertAfter = document.querySelector(CONFIG.heroDefaultInsertAfterSelector);
+    var heroRow = document.querySelector(CONFIG.heroRowSelector);
+    var heroColOne = document.querySelector(CONFIG.heroColOneSelector);
+
+    if (!defaultInsertAfter && !heroRow && !heroColOne) return false;
 
     var items = collectAvailabilityItems();
     var existing = document.getElementById(MODULE_ID);
@@ -309,11 +518,7 @@
       return false;
     }
 
-    var signature = items
-      .map(function (item) {
-        return item.programName + ":" + item.statusLabel;
-      })
-      .join("|");
+    var signature = getSignature(items);
 
     if (existing && existing.getAttribute("data-gsi-availability-signature") === signature) {
       applyResponsiveStyles();
@@ -324,11 +529,11 @@
 
     if (existing && existing.parentNode) {
       existing.parentNode.replaceChild(module, existing);
-    } else if (insertAfterEl.parentNode) {
-      insertAfterEl.parentNode.insertBefore(module, insertAfterEl.nextSibling);
     }
 
+    placeModule(module);
     applyResponsiveStyles();
+
     return true;
   }
 
