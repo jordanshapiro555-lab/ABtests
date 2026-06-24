@@ -454,17 +454,25 @@
                 if (list) {
                     setImportantStyles(list, {
                         "display": "flex",
-                        "flex-direction": "row",
-                        "flex-wrap": "wrap",
-                        "align-items": "center",
+                        "flex-direction": "column",
+                        "flex-wrap": "nowrap",
+                        "align-items": "flex-start",
                         "justify-content": "flex-start",
-                        "column-gap": "18px",
-                        "row-gap": "10px"
+                        "column-gap": "0",
+                        "row-gap": "12px",
+                        "gap": "12px",
+                        "width": "100%",
+                        "max-width": "100%"
                     });
                 }
 
                 Array.prototype.forEach.call(items, function(item) {
                     setImportantStyles(item, {
+                        "display": "flex",
+                        "align-items": "center",
+                        "justify-content": "flex-start",
+                        "width": "100%",
+                        "max-width": "100%",
                         "margin": "0",
                         "padding": "0",
                         "border-right": "0",
