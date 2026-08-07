@@ -4,7 +4,6 @@
 
     var RENDER_DEBOUNCE_MS = 100;
     var APPLIED_ATTR = "data-gsi-experiment-applied";
-    var GLOBE_ICON = "/etc.clientlibs/gsi/clientlibs/clientlib-site/resources/images/icon-web-link-dark-blue.svg";
     var renderTimer = null;
 
     function getText(element) {
@@ -23,36 +22,53 @@
 
     function extractCardData(item) {
         var data = {};
+
         var numberElement = item.querySelector(
             ".gsi-school-locator__results-item-number"
         );
+
         var headingElement = item.querySelector(
             ".gsi-school-locator__results-item-heading"
         );
+
         var reviewsElement = item.querySelector(
             ".gsi-google-reviews.gsi-google-reviews--school-locator"
         );
+
         var comingSoonElement = item.querySelector(
             ".gsi-school-locator__results-item-coming-soon"
         );
-        var distanceElement = item.querySelector(".gsi-font-size-xsmall");
+
+        var distanceElement = item.querySelector(
+            ".gsi-font-size-xsmall"
+        );
+
         var resultLinks = item.querySelectorAll(
             ".gsi-school-locator__results-item-link"
         );
+
         var websiteElement = null;
+        var websiteLabelElement = null;
         var directionsElement = null;
-        var infoBlock = item.querySelector(".gsi-font-size-small");
+
+        var infoBlock = item.querySelector(
+            ".gsi-font-size-small"
+        );
+
         var phoneElement = infoBlock
             ? infoBlock.querySelector(
                 ".gsi-school-locator__results-item-telephone"
             )
             : null;
+
         var tourElement = item.querySelector(
-            "a.cmp-button, a[href*='/our-school/goddard-form']"
+            "a.cmp-button[href*='/our-school/goddard-form']"
         );
 
         data.number = getText(numberElement).replace(/\.$/, "");
+
         data.name = getText(headingElement);
+
         data.schoolHref = headingElement
             ? headingElement.getAttribute("href")
             : null;
@@ -71,8 +87,19 @@
         Array.prototype.forEach.call(resultLinks, function (link) {
             var href = link.getAttribute("href") || "";
 
-            if (!websiteElement && href.indexOf("/schools/") === 0) {
+            if (
+                !websiteElement &&
+                href.indexOf("/schools/") === 0
+            ) {
                 websiteElement = link;
+
+                var websiteParent = link.parentNode;
+
+                if (websiteParent) {
+                    websiteLabelElement = websiteParent.querySelector(
+                        ".gsi-school-locator__results-item-link-label"
+                    );
+                }
             }
 
             if (
@@ -83,15 +110,27 @@
             }
         });
 
-        data.websiteHref = websiteElement
-            ? websiteElement.getAttribute("href")
-            : data.schoolHref;
+        /*
+         * Preserve the site's original Website link markup.
+         * This retains its existing class, icon and production styling.
+         */
+        data.websiteHtml = websiteElement
+            ? websiteElement.outerHTML
+            : "";
+
+        /*
+         * Preserve the original Website label.
+         */
+        data.websiteLabelHtml = websiteLabelElement
+            ? websiteLabelElement.outerHTML
+            : "";
 
         data.directionsHref = directionsElement
             ? directionsElement.getAttribute("href")
             : null;
 
         data.phone = getText(phoneElement);
+
         data.phoneHref = phoneElement
             ? phoneElement.getAttribute("href")
             : null;
@@ -120,17 +159,27 @@
                 })
                 .filter(Boolean);
 
-            data.address = infoParts.length ? infoParts[0] : "";
+            data.address = infoParts.length
+                ? infoParts[0]
+                : "";
 
-            data.hours =
-                infoParts.length > 1
-                    ? infoParts[infoParts.length - 1]
-                    : "";
+            data.hours = infoParts.length > 1
+                ? infoParts[infoParts.length - 1]
+                : "";
         }
 
-        data.tourHref = tourElement
-            ? tourElement.getAttribute("href")
-            : null;
+        /*
+         * Preserve the entire production CTA unchanged.
+         * This retains:
+         * - original classes
+         * - original text
+         * - Book A Tour / Tell Me More variations
+         * - original href
+         * - existing production styling
+         */
+        data.tourHtml = tourElement
+            ? tourElement.outerHTML
+            : "";
 
         return data;
     }
@@ -158,17 +207,24 @@
         var html = "";
         var phoneIcon = buildPhoneIcon();
 
-        if (data.websiteHref) {
-            html +=
-                '<a class="gsi-exp-card__globe" href="' +
-                escapeHtml(data.websiteHref) +
-                '" aria-label="Visit school website">' +
-                    '<img src="' +
-                    escapeHtml(GLOBE_ICON) +
-                    '" alt="">' +
-                "</a>";
+        /*
+         * Original Website link and label.
+         */
+        if (data.websiteHtml) {
+            html += '<div class="gsi-exp-card__website">';
+
+            html += data.websiteHtml;
+
+            if (data.websiteLabelHtml) {
+                html += data.websiteLabelHtml;
+            }
+
+            html += "</div>";
         }
 
+        /*
+         * School number + title.
+         */
         html += '<div class="gsi-exp-card__top">';
 
         if (data.number) {
@@ -194,6 +250,9 @@
 
         html += "</div>";
 
+        /*
+         * Preserve Google Reviews directly beneath title.
+         */
         if (data.googleReviewsHtml) {
             html += data.googleReviewsHtml;
         }
@@ -205,6 +264,9 @@
                 "</div>";
         }
 
+        /*
+         * School details.
+         */
         html += '<div class="gsi-exp-card__meta">';
 
         if (data.distance) {
@@ -254,26 +316,28 @@
         }
 
         html += "</div>";
-        html += '<div class="gsi-exp-card__actions">';
 
-        if (data.tourHref) {
-            html +=
-                '<a class="gsi-exp-card__btn gsi-exp-card__btn--primary" href="' +
-                escapeHtml(data.tourHref) +
-                '">Book A Tour</a>';
+        /*
+         * Original CTA, completely unchanged.
+         */
+        if (data.tourHtml) {
+            html += '<div class="gsi-exp-card__tour">';
+            html += data.tourHtml;
+            html += "</div>";
         }
 
+        /*
+         * Experiment-only mobile phone CTA.
+         */
         if (data.phone && data.phoneHref) {
             html +=
-                '<a class="gsi-exp-card__btn gsi-exp-card__btn--phone" href="' +
+                '<a class="gsi-exp-card__phone-button" href="' +
                 escapeHtml(data.phoneHref) +
                 '">' +
                 phoneIcon +
                 escapeHtml(data.phone) +
                 "</a>";
         }
-
-        html += "</div>";
 
         return html;
     }
@@ -290,8 +354,15 @@
         }
 
         item.innerHTML = buildCardHtml(data);
-        item.classList.add("gsi-exp-card");
-        item.setAttribute(APPLIED_ATTR, "true");
+
+        item.classList.add(
+            "gsi-exp-card"
+        );
+
+        item.setAttribute(
+            APPLIED_ATTR,
+            "true"
+        );
     }
 
     function renderCards() {
@@ -299,9 +370,12 @@
             ".gsi-school-locator__results-item"
         );
 
-        Array.prototype.forEach.call(items, function (item) {
-            applyCard(item);
-        });
+        Array.prototype.forEach.call(
+            items,
+            function (item) {
+                applyCard(item);
+            }
+        );
     }
 
     function scheduleRender() {
@@ -316,32 +390,46 @@
     function init() {
         renderCards();
 
-        if (!window.MutationObserver || !document.body) {
+        if (
+            !window.MutationObserver ||
+            !document.body
+        ) {
             return;
         }
 
-        var observer = new MutationObserver(function (mutations) {
-            var shouldRender = false;
+        var observer = new MutationObserver(
+            function (mutations) {
+                var shouldRender = false;
 
-            Array.prototype.forEach.call(mutations, function (mutation) {
-                if (mutation.addedNodes.length) {
-                    shouldRender = true;
+                Array.prototype.forEach.call(
+                    mutations,
+                    function (mutation) {
+                        if (mutation.addedNodes.length) {
+                            shouldRender = true;
+                        }
+                    }
+                );
+
+                if (shouldRender) {
+                    scheduleRender();
                 }
-            });
-
-            if (shouldRender) {
-                scheduleRender();
             }
-        });
+        );
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+        observer.observe(
+            document.body,
+            {
+                childList: true,
+                subtree: true
+            }
+        );
     }
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
+        document.addEventListener(
+            "DOMContentLoaded",
+            init
+        );
     } else {
         init();
     }
