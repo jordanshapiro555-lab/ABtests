@@ -110,17 +110,10 @@
             }
         });
 
-        /*
-         * Preserve the site's original Website link markup.
-         * This retains its existing class, icon and production styling.
-         */
         data.websiteHtml = websiteElement
             ? websiteElement.outerHTML
             : "";
 
-        /*
-         * Preserve the original Website label.
-         */
         data.websiteLabelHtml = websiteLabelElement
             ? websiteLabelElement.outerHTML
             : "";
@@ -168,15 +161,6 @@
                 : "";
         }
 
-        /*
-         * Preserve the entire production CTA unchanged.
-         * This retains:
-         * - original classes
-         * - original text
-         * - Book A Tour / Tell Me More variations
-         * - original href
-         * - existing production styling
-         */
         data.tourHtml = tourElement
             ? tourElement.outerHTML
             : "";
@@ -207,12 +191,8 @@
         var html = "";
         var phoneIcon = buildPhoneIcon();
 
-        /*
-         * Original Website link and label.
-         */
         if (data.websiteHtml) {
             html += '<div class="gsi-exp-card__website">';
-
             html += data.websiteHtml;
 
             if (data.websiteLabelHtml) {
@@ -222,9 +202,6 @@
             html += "</div>";
         }
 
-        /*
-         * School number + title.
-         */
         html += '<div class="gsi-exp-card__top">';
 
         if (data.number) {
@@ -250,9 +227,6 @@
 
         html += "</div>";
 
-        /*
-         * Preserve Google Reviews directly beneath title.
-         */
         if (data.googleReviewsHtml) {
             html += data.googleReviewsHtml;
         }
@@ -264,9 +238,6 @@
                 "</div>";
         }
 
-        /*
-         * School details.
-         */
         html += '<div class="gsi-exp-card__meta">';
 
         if (data.distance) {
@@ -317,26 +288,10 @@
 
         html += "</div>";
 
-        /*
-         * Original CTA, completely unchanged.
-         */
         if (data.tourHtml) {
             html += '<div class="gsi-exp-card__tour">';
             html += data.tourHtml;
             html += "</div>";
-        }
-
-        /*
-         * Experiment-only mobile phone CTA.
-         */
-        if (data.phone && data.phoneHref) {
-            html +=
-                '<a class="gsi-exp-card__phone-button" href="' +
-                escapeHtml(data.phoneHref) +
-                '">' +
-                phoneIcon +
-                escapeHtml(data.phone) +
-                "</a>";
         }
 
         return html;
@@ -354,15 +309,8 @@
         }
 
         item.innerHTML = buildCardHtml(data);
-
-        item.classList.add(
-            "gsi-exp-card"
-        );
-
-        item.setAttribute(
-            APPLIED_ATTR,
-            "true"
-        );
+        item.classList.add("gsi-exp-card");
+        item.setAttribute(APPLIED_ATTR, "true");
     }
 
     function renderCards() {
@@ -390,10 +338,7 @@
     function init() {
         renderCards();
 
-        if (
-            !window.MutationObserver ||
-            !document.body
-        ) {
+        if (!window.MutationObserver || !document.body) {
             return;
         }
 
