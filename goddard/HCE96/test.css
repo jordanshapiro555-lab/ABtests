@@ -5,6 +5,11 @@
     }
 }
 
+
+/* ==========================================================
+   Card shell
+   ========================================================== */
+
 .gsi-school-locator__results-item.gsi-exp-card {
     position: relative !important;
     box-sizing: border-box !important;
@@ -15,6 +20,28 @@
     list-style: none !important;
     color: #002856 !important;
 }
+
+
+/* ==========================================================
+   Preserve existing school/card imagery
+   ========================================================== */
+
+.gsi-exp-card__media {
+    margin: 0 0 16px !important;
+}
+
+/*
+ * Intentionally no width, height, max-width, object-fit
+ * or aspect-ratio overrides are applied to preserved images.
+ */
+.gsi-exp-card__media img {
+    display: block;
+}
+
+
+/* ==========================================================
+   Title
+   ========================================================== */
 
 .gsi-exp-card__top {
     display: flex !important;
@@ -55,6 +82,11 @@
     text-decoration: none !important;
 }
 
+
+/* ==========================================================
+   Website
+   ========================================================== */
+
 .gsi-exp-card__website {
     position: absolute !important;
     top: 20px !important;
@@ -73,6 +105,11 @@
     display: block !important;
 }
 
+
+/* ==========================================================
+   Reviews
+   ========================================================== */
+
 .gsi-exp-card >
 .gsi-google-reviews.gsi-google-reviews--school-locator {
     display: flex !important;
@@ -80,6 +117,11 @@
     width: fit-content !important;
     margin: 6px 60px 0 36px !important;
 }
+
+
+/* ==========================================================
+   Details
+   ========================================================== */
 
 .gsi-exp-card__coming-soon {
     margin: 8px 0 0 !important;
@@ -122,9 +164,34 @@
     vertical-align: -2px !important;
 }
 
+
+/* ==========================================================
+   Preserve original program/features list
+   ========================================================== */
+
+.gsi-exp-card .gsi-school-locator__features-list {
+    margin-top: 16px !important;
+}
+
+/*
+ * No experiment typography, sizing or visual styling is
+ * applied to the feature list itself. Existing production
+ * list styling remains in control.
+ */
+
+
+/* ==========================================================
+   Original CTA
+   ========================================================== */
+
 .gsi-exp-card__tour {
     margin-top: 16px !important;
 }
+
+
+/* ==========================================================
+   Mobile
+   ========================================================== */
 
 @media (max-width: 767px) {
     .gsi-exp-card__website {
@@ -134,6 +201,14 @@
     .gsi-exp-card >
     .gsi-google-reviews.gsi-google-reviews--school-locator {
         margin-right: 0 !important;
+    }
+
+    /*
+     * Cards without Google Reviews need additional space
+     * between the title and school details.
+     */
+    .gsi-exp-card.gsi-exp-card--no-reviews .gsi-exp-card__meta {
+        margin: 16px 0 0 !important;
     }
 }
 </style>
