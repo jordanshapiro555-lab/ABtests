@@ -7,9 +7,10 @@
 
 
 /* ==========================================================
-   Card shell
+   Results-list cards ONLY
    ========================================================== */
 
+#searchNearYouResultsList >
 .gsi-school-locator__results-item.gsi-exp-card {
     position: relative !important;
     box-sizing: border-box !important;
@@ -23,34 +24,17 @@
 
 
 /* ==========================================================
-   Preserve existing school/card imagery
-   ========================================================== */
-
-.gsi-exp-card__media {
-    margin: 0 0 16px !important;
-}
-
-/*
- * Intentionally no width, height, max-width, object-fit
- * or aspect-ratio overrides are applied to preserved images.
- */
-.gsi-exp-card__media img {
-    display: block;
-}
-
-
-/* ==========================================================
    Title
    ========================================================== */
 
-.gsi-exp-card__top {
+#searchNearYouResultsList .gsi-exp-card__top {
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
     padding-right: 60px !important;
 }
 
-.gsi-exp-card__badge {
+#searchNearYouResultsList .gsi-exp-card__badge {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -63,7 +47,7 @@
     line-height: 1 !important;
 }
 
-.gsi-exp-card__name {
+#searchNearYouResultsList .gsi-exp-card__name {
     box-sizing: border-box !important;
     margin-bottom: 0 !important;
     background-color: transparent !important;
@@ -76,8 +60,8 @@
     text-decoration: none !important;
 }
 
-.gsi-exp-card__name:hover,
-.gsi-exp-card__name:focus {
+#searchNearYouResultsList .gsi-exp-card__name:hover,
+#searchNearYouResultsList .gsi-exp-card__name:focus {
     color: #002855 !important;
     text-decoration: none !important;
 }
@@ -87,7 +71,7 @@
    Website
    ========================================================== */
 
-.gsi-exp-card__website {
+#searchNearYouResultsList .gsi-exp-card__website {
     position: absolute !important;
     top: 20px !important;
     right: 20px !important;
@@ -96,12 +80,16 @@
     align-items: center !important;
 }
 
-.gsi-exp-card__website .gsi-school-locator__results-item-link {
+#searchNearYouResultsList
+.gsi-exp-card__website
+.gsi-school-locator__results-item-link {
     width: 2rem !important;
     height: 2rem !important;
 }
 
-.gsi-exp-card__website .gsi-school-locator__results-item-link-label {
+#searchNearYouResultsList
+.gsi-exp-card__website
+.gsi-school-locator__results-item-link-label {
     display: block !important;
 }
 
@@ -110,6 +98,7 @@
    Reviews
    ========================================================== */
 
+#searchNearYouResultsList
 .gsi-exp-card >
 .gsi-google-reviews.gsi-google-reviews--school-locator {
     display: flex !important;
@@ -123,32 +112,33 @@
    Details
    ========================================================== */
 
-.gsi-exp-card__coming-soon {
+#searchNearYouResultsList .gsi-exp-card__coming-soon {
     margin: 8px 0 0 !important;
     color: #C8102E !important;
 }
 
-.gsi-exp-card__meta {
+#searchNearYouResultsList .gsi-exp-card__meta {
     margin: 10px 0 0 !important;
-    line-height: 1.5 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.125 !important;
     color: #002856 !important;
 }
 
-.gsi-exp-card__distance strong {
+#searchNearYouResultsList .gsi-exp-card__distance strong {
     font-weight: 700 !important;
 }
 
-.gsi-exp-card__address {
+#searchNearYouResultsList .gsi-exp-card__address {
     color: #002856 !important;
     text-decoration: underline !important;
     text-underline-offset: 2px !important;
 }
 
-.gsi-exp-card__hours {
+#searchNearYouResultsList .gsi-exp-card__hours {
     margin: 4px 0 0 !important;
 }
 
-.gsi-exp-card__phone-link {
+#searchNearYouResultsList .gsi-exp-card__phone-link {
     display: inline-flex !important;
     align-items: center !important;
     margin: 4px 0 0 !important;
@@ -156,7 +146,7 @@
     text-decoration: underline !important;
 }
 
-.gsi-exp-card__phone-icon {
+#searchNearYouResultsList .gsi-exp-card__phone-icon {
     display: inline-block !important;
     width: 14px !important;
     height: 14px !important;
@@ -166,25 +156,21 @@
 
 
 /* ==========================================================
-   Preserve original program/features list
+   Features
    ========================================================== */
 
-.gsi-exp-card .gsi-school-locator__features-list {
+#searchNearYouResultsList
+.gsi-exp-card
+.gsi-school-locator__features-list {
     margin-top: 16px !important;
 }
-
-/*
- * No experiment typography, sizing or visual styling is
- * applied to the feature list itself. Existing production
- * list styling remains in control.
- */
 
 
 /* ==========================================================
    Original CTA
    ========================================================== */
 
-.gsi-exp-card__tour {
+#searchNearYouResultsList .gsi-exp-card__tour {
     margin-top: 16px !important;
 }
 
@@ -194,20 +180,19 @@
    ========================================================== */
 
 @media (max-width: 767px) {
-    .gsi-exp-card__website {
+    #searchNearYouResultsList .gsi-exp-card__website {
         top: 10px !important;
     }
 
+    #searchNearYouResultsList
     .gsi-exp-card >
     .gsi-google-reviews.gsi-google-reviews--school-locator {
         margin-right: 0 !important;
     }
 
-    /*
-     * Cards without Google Reviews need additional space
-     * between the title and school details.
-     */
-    .gsi-exp-card.gsi-exp-card--no-reviews .gsi-exp-card__meta {
+    #searchNearYouResultsList
+    .gsi-exp-card.gsi-exp-card--no-reviews
+    .gsi-exp-card__meta {
         margin: 16px 0 0 !important;
     }
 }
