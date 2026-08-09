@@ -1,0 +1,76 @@
+<style type="text/css">
+    /*
+ * MAP POPUP CARDS ONLY
+ *
+ * No card width, height, padding, image, carousel,
+ * Google Reviews or CTA styles are included.
+ */
+
+
+    /* Underline existing school title */
+    .mapboxgl-popup-content .gsi-popup-exp-card .gsi-school-locator__results-item-heading {
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+    }
+
+
+    /* Keep Website control on the right */
+    .mapboxgl-popup-content .gsi-popup-exp-card__actions {
+        margin-left: auto !important;
+    }
+
+
+    /* Resize Website control only */
+    .mapboxgl-popup-content .gsi-popup-exp-card__website .gsi-school-locator__results-item-link {
+        width: 2rem !important;
+        height: 2rem !important;
+    }
+
+
+    /*
+ * No color/background rules are applied to the Website
+ * control, so its production styling remains intact.
+ */
+
+
+    /* Distance + address + hours + phone */
+    .mapboxgl-popup-content .gsi-popup-exp-card__meta {
+        margin: 10px 0 0 !important;
+        font-size: 0.875rem !important;
+        line-height: 1.125 !important;
+    }
+
+
+    /* Distance remains bold */
+    .mapboxgl-popup-content .gsi-popup-exp-card__distance strong {
+        font-weight: 700 !important;
+    }
+
+
+    /* Address appears on same row as distance */
+    .mapboxgl-popup-content .gsi-popup-exp-card__address {
+        color: inherit !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+    }
+
+
+    /* Hours immediately below address */
+    .mapboxgl-popup-content .gsi-popup-exp-card__hours {
+        margin: 4px 0 0 !important;
+    }
+
+
+    /* Phone immediately below hours */
+    .mapboxgl-popup-content .gsi-popup-exp-card__phone {
+        display: block !important;
+        margin: 4px 0 0 !important;
+        text-decoration: underline !important;
+    }
+
+    .mapboxgl-popup-content .gsi-popup-exp-card .gsi-popup-exp-card__meta {
+        margin-bottom: 10px !important;
+        width: calc(100% + 16px) !important;
+        max-width: calc(100% + 16px) !important;
+    }
+</style>
