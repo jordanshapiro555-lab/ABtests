@@ -1,199 +1,186 @@
 <style type="text/css">
-@media (min-width: 48rem) {
-    .gsi-school-locator__panel {
-        max-width: 22rem !important;
+    @media (min-width: 48rem) {
+        .gsi-school-locator__panel {
+            max-width: 22rem !important;
+        }
     }
-}
 
 
-/* ==========================================================
+    /* ==========================================================
    Results-list cards ONLY
    ========================================================== */
 
-#searchNearYouResultsList >
-.gsi-school-locator__results-item.gsi-exp-card {
-    position: relative !important;
-    box-sizing: border-box !important;
-    padding: 20px !important;
-    border: 1px solid #D4DCE6 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 1px 3px rgba(0, 40, 86, 0.08) !important;
-    list-style: none !important;
-    color: #002856 !important;
-}
+    #searchNearYouResultsList>.gsi-school-locator__results-item.gsi-exp-card {
+        position: relative !important;
+        box-sizing: border-box !important;
+        padding: 20px !important;
+        border: 1px solid #D4DCE6 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 3px rgba(0, 40, 86, 0.08) !important;
+        list-style: none !important;
+        color: #002856 !important;
+    }
 
 
-/* ==========================================================
+    /* ==========================================================
    Title
    ========================================================== */
 
-#searchNearYouResultsList .gsi-exp-card__top {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    padding-right: 60px !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__top {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding-right: 60px !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex: 0 0 auto !important;
-    width: 26px !important;
-    height: 26px !important;
-    border-radius: 50% !important;
-    background: #002856 !important;
-    color: #FFFFFF !important;
-    line-height: 1 !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        width: 26px !important;
+        height: 26px !important;
+        border-radius: 50% !important;
+        background: #002856 !important;
+        color: #FFFFFF !important;
+        line-height: 1 !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__name {
-    box-sizing: border-box !important;
-    margin-bottom: 0 !important;
-    background-color: transparent !important;
-    color: #002855 !important;
-    font-family: Quicksand, "Lucida Grande", Verdana, sans-serif !important;
-    font-size: 1rem !important;
-    font-weight: 700 !important;
-    line-height: 1.375rem !important;
-    text-align: left !important;
-    text-decoration: underline !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__name {
+        box-sizing: border-box !important;
+        margin-bottom: 0 !important;
+        background-color: transparent !important;
+        color: #002855 !important;
+        font-family: Quicksand, "Lucida Grande", Verdana, sans-serif !important;
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        line-height: 1.375rem !important;
+        text-align: left !important;
+        text-decoration: underline !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__name:hover,
-#searchNearYouResultsList .gsi-exp-card__name:focus {
-    color: #002855 !important;
-    text-decoration: underline !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__name:hover,
+    #searchNearYouResultsList .gsi-exp-card__name:focus {
+        color: #002855 !important;
+        text-decoration: underline !important;
+    }
 
 
-/* ==========================================================
+    /* ==========================================================
    Website
    ========================================================== */
 
-#searchNearYouResultsList .gsi-exp-card__website {
-    position: absolute !important;
-    top: 20px !important;
-    right: 20px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__website {
+        position: absolute !important;
+        top: 12px !important;
+        right: 20px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
 
-#searchNearYouResultsList
-.gsi-exp-card__website
-.gsi-school-locator__results-item-link {
-    width: 2rem !important;
-    height: 2rem !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__website .gsi-school-locator__results-item-link {
+        width: 2rem !important;
+        height: 2rem !important;
+    }
 
-#searchNearYouResultsList
-.gsi-exp-card__website
-.gsi-school-locator__results-item-link-label {
-    display: block !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__website .gsi-school-locator__results-item-link-label {
+        display: block !important;
+    }
 
 
-/* ==========================================================
+    /* ==========================================================
    Reviews
    ========================================================== */
 
-#searchNearYouResultsList
-.gsi-exp-card >
-.gsi-google-reviews.gsi-google-reviews--school-locator {
-    display: flex !important;
-    align-items: center !important;
-    width: fit-content !important;
-    margin: 6px 60px 0 36px !important;
-}
+    #searchNearYouResultsList .gsi-exp-card>.gsi-google-reviews.gsi-google-reviews--school-locator {
+        display: flex !important;
+        align-items: center !important;
+        width: fit-content !important;
+        margin: 6px 60px 0 36px !important;
+    }
 
 
-/* ==========================================================
+    /* ==========================================================
    Details
    ========================================================== */
 
-#searchNearYouResultsList .gsi-exp-card__coming-soon {
-    margin: 8px 0 0 !important;
-    color: #C8102E !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__coming-soon {
+        margin: 8px 0 0 !important;
+        color: #C8102E !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__meta {
-    margin: 10px 0 0 !important;
-    font-size: 0.875rem !important;
-    line-height: 1.125 !important;
-    color: #002856 !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__meta {
+        margin: 10px 0 0 !important;
+        font-size: 0.875rem !important;
+        line-height: 1.125 !important;
+        color: #002856 !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__distance strong {
-    font-weight: 700 !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__distance strong {
+        font-weight: 700 !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__address {
-    color: #002856 !important;
-    text-decoration: underline !important;
-    text-underline-offset: 2px !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__address {
+        color: #002856 !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__hours {
-    margin: 4px 0 0 !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__hours {
+        margin: 4px 0 0 !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__phone-link {
-    display: inline-flex !important;
-    align-items: center !important;
-    margin: 4px 0 0 !important;
-    color: #1A6DCC !important;
-    text-decoration: underline !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__phone-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        margin: 4px 0 0 !important;
+        color: #1A6DCC !important;
+        text-decoration: underline !important;
+    }
 
-#searchNearYouResultsList .gsi-exp-card__phone-icon {
-    display: inline-block !important;
-    width: 14px !important;
-    height: 14px !important;
-    margin-right: 6px !important;
-    vertical-align: -2px !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__phone-icon {
+        display: inline-block !important;
+        width: 14px !important;
+        height: 14px !important;
+        margin-right: 6px !important;
+        vertical-align: -2px !important;
+    }
 
 
-/* ==========================================================
+    /* ==========================================================
    Features
    ========================================================== */
 
-#searchNearYouResultsList
-.gsi-exp-card
-.gsi-school-locator__features-list {
-    margin-top: 16px !important;
-}
+    #searchNearYouResultsList .gsi-exp-card .gsi-school-locator__features-list {
+        margin-top: 16px !important;
+    }
 
 
-/* ==========================================================
+    /* ==========================================================
    Original CTA
    ========================================================== */
 
-#searchNearYouResultsList .gsi-exp-card__tour {
-    margin-top: 16px !important;
-}
+    #searchNearYouResultsList .gsi-exp-card__tour {
+        margin-top: 16px !important;
+    }
 
 
-/* ==========================================================
+    /* ==========================================================
    Mobile
    ========================================================== */
 
-@media (max-width: 767px) {
-    #searchNearYouResultsList .gsi-exp-card__website {
-        top: 10px !important;
-    }
+    @media (max-width: 767px) {
+        #searchNearYouResultsList .gsi-exp-card__website {
+            top: 10px !important;
+        }
 
-    #searchNearYouResultsList
-    .gsi-exp-card >
-    .gsi-google-reviews.gsi-google-reviews--school-locator {
-        margin-right: 0 !important;
-    }
+        #searchNearYouResultsList .gsi-exp-card>.gsi-google-reviews.gsi-google-reviews--school-locator {
+            margin-right: 0 !important;
+        }
 
-    #searchNearYouResultsList
-    .gsi-exp-card.gsi-exp-card--no-reviews
-    .gsi-exp-card__meta {
-        margin: 16px 0 0 !important;
+        #searchNearYouResultsList .gsi-exp-card.gsi-exp-card--no-reviews .gsi-exp-card__meta {
+            margin: 16px 0 0 !important;
+        }
     }
-}
 </style>
