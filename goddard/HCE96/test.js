@@ -90,9 +90,6 @@
             "mi"
         );
 
-        /*
-         * Preserve the complete production features list.
-         */
         data.featuresHtml = featuresElement
             ? featuresElement.outerHTML
             : "";
@@ -121,9 +118,6 @@
             }
         });
 
-        /*
-         * Preserve the original Website icon/link and label.
-         */
         data.websiteHtml = websiteElement
             ? websiteElement.outerHTML
             : "";
@@ -175,59 +169,9 @@
                 : "";
         }
 
-        /*
-         * Preserve original production CTA exactly.
-         */
         data.tourHtml = tourElement
             ? tourElement.outerHTML
             : "";
-
-        /*
-         * Preserve school/card images while excluding the small
-         * Website and Directions icons.
-         *
-         * No experiment sizing is applied to these images.
-         */
-        data.mediaHtml = "";
-
-        var images = item.querySelectorAll("img");
-
-        Array.prototype.forEach.call(images, function (image) {
-            var actionLink = image.closest
-                ? image.closest(".gsi-school-locator__results-item-link")
-                : null;
-
-            if (actionLink) {
-                return;
-            }
-
-            /*
-             * Avoid capturing imagery already contained inside preserved
-             * features, reviews or CTA markup.
-             */
-            if (
-                featuresElement &&
-                featuresElement.contains(image)
-            ) {
-                return;
-            }
-
-            if (
-                reviewsElement &&
-                reviewsElement.contains(image)
-            ) {
-                return;
-            }
-
-            if (
-                tourElement &&
-                tourElement.contains(image)
-            ) {
-                return;
-            }
-
-            data.mediaHtml += image.outerHTML;
-        });
 
         return data;
     }
@@ -255,19 +199,6 @@
         var html = "";
         var phoneIcon = buildPhoneIcon();
 
-        /*
-         * Preserve original school/card imagery.
-         * Image dimensions remain controlled by production styles.
-         */
-        if (data.mediaHtml) {
-            html += '<div class="gsi-exp-card__media">';
-            html += data.mediaHtml;
-            html += "</div>";
-        }
-
-        /*
-         * Original Website icon/link and label.
-         */
         if (data.websiteHtml) {
             html += '<div class="gsi-exp-card__website">';
 
@@ -280,9 +211,6 @@
             html += "</div>";
         }
 
-        /*
-         * Number and school title.
-         */
         html += '<div class="gsi-exp-card__top">';
 
         if (data.number) {
@@ -308,9 +236,6 @@
 
         html += "</div>";
 
-        /*
-         * Original Google Reviews.
-         */
         if (data.googleReviewsHtml) {
             html += data.googleReviewsHtml;
         }
@@ -322,9 +247,6 @@
                 "</div>";
         }
 
-        /*
-         * Distance, address, hours and phone.
-         */
         html += '<div class="gsi-exp-card__meta">';
 
         if (data.distance) {
@@ -375,16 +297,10 @@
 
         html += "</div>";
 
-        /*
-         * Original program/features list.
-         */
         if (data.featuresHtml) {
             html += data.featuresHtml;
         }
 
-        /*
-         * Original Book A Tour / Tell Me More CTA.
-         */
         if (data.tourHtml) {
             html += '<div class="gsi-exp-card__tour">';
             html += data.tourHtml;
@@ -406,22 +322,18 @@
         }
 
         item.innerHTML = buildCardHtml(data);
-
         item.classList.add("gsi-exp-card");
 
         if (!data.hasReviews) {
             item.classList.add("gsi-exp-card--no-reviews");
         }
 
-        item.setAttribute(
-            APPLIED_ATTR,
-            "true"
-        );
+        item.setAttribute(APPLIED_ATTR, "true");
     }
 
     function renderCards() {
         var items = document.querySelectorAll(
-            ".gsi-school-locator__results-item"
+            "#searchNearYouResultsList > .gsi-school-locator__results-item"
         );
 
         Array.prototype.forEach.call(
@@ -448,32 +360,27 @@
             return;
         }
 
-        var observer = new MutationObserver(
-            function (mutations) {
-                var shouldRender = false;
+        var observer = new MutationObserver(function (mutations) {
+            var shouldRender = false;
 
-                Array.prototype.forEach.call(
-                    mutations,
-                    function (mutation) {
-                        if (mutation.addedNodes.length) {
-                            shouldRender = true;
-                        }
+            Array.prototype.forEach.call(
+                mutations,
+                function (mutation) {
+                    if (mutation.addedNodes.length) {
+                        shouldRender = true;
                     }
-                );
-
-                if (shouldRender) {
-                    scheduleRender();
                 }
-            }
-        );
+            );
 
-        observer.observe(
-            document.body,
-            {
-                childList: true,
-                subtree: true
+            if (shouldRender) {
+                scheduleRender();
             }
-        );
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     }
 
     if (document.readyState === "loading") {
