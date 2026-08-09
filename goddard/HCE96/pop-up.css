@@ -70,7 +70,21 @@
 
     .mapboxgl-popup-content .gsi-popup-exp-card .gsi-popup-exp-card__meta {
         margin-bottom: 10px !important;
-        width: calc(100% + 16px) !important;
-        max-width: calc(100% + 16px) !important;
     }
+
+  .mapboxgl-popup-content
+.gsi-popup-exp-card
+.gsi-popup-exp-card__content-col {
+    overflow: visible !important;
+}
+
+.mapboxgl-popup-content
+.gsi-popup-exp-card
+.gsi-popup-exp-card__meta {
+    margin-right: -16px !important;
+    margin-bottom: 10px !important;
+    width: calc(100% + 16px) !important;
+    max-width: none !important;
+}
+  
 </style>
