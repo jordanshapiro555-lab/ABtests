@@ -141,6 +141,7 @@
             }
 
             if (leftColumn) {
+                leftColumn.classList.add("gsi-popup-exp-card__content-col");
                 leftColumn.appendChild(meta);
             }
 
