@@ -1,0 +1,221 @@
+<style type="text/css">
+    /* ==========================================================
+   GSI Hero Availability Module
+   ========================================================== */
+
+    .disclaimer-text {
+        font-size: 12px;
+        margin-top: 16px;
+    }
+
+    .gsi-school-navigation__button:after {
+        display: none;
+    }
+
+    #gsi-target-hero-availability {
+        /* display: block !important;
+        box-sizing: border-box !important;
+        background: transparent !important;
+        color: #002856 !important;
+        font-family: 'Noto Sans', Arial, sans-serif !important;
+        font-style: normal !important;
+        text-align: left !important;
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 26px 0 0 0 !important;
+        padding: 0 !important;
+        z-index: 1 !important; */
+        border: 1px solid var(--color-grey-Gray-3, #D8D8D8) !important;
+        border-width: 1px !important;
+        padding: 16px !important;
+        angle: 0 deg !important;
+        opacity: 1 !important;
+        border-radius: 20px !important;
+        margin-top: 24px !important;
+        margin-right: 24px !important;
+        height: fit-content;
+        width: fit-content;
+    }
+
+    #gsi-target-hero-availability .gsi-avail__eyebrow p {
+        /* display: block !important;
+        margin: 0 0 14px 0 !important;
+        padding: 0 !important;
+        color: #002856 !important;
+        font-family: 'Noto Sans', Arial, sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0.08em !important; */
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        letter-spacing: 0% !important;
+        vertical-align: middle !important;
+        color: #002855 !important;
+        line-height: 20px !important;
+        margin-bottom: 16px;
+    }
+
+    #gsi-target-hero-availability .gsi-avail__list {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 16px !important;
+
+    }
+
+    #gsi-target-hero-availability .gsi-avail__item {
+        white-space: nowrap !important;
+        color: #002856 !important;
+    }
+
+    #gsi-target-hero-availability .gsi-avail__program {
+        /* display: inline-block !important;
+        margin: 0 9px 0 0 !important;
+        padding: 0 !important;
+        color: #002856 !important;
+        font-family: 'Noto Sans', Arial, sans-serif !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        line-height: 1.25 !important; */
+        font-family: "Quicksand", "Lucida Grande", Verdana, sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        letter-spacing: 0% !important;
+        vertical-align: middle !important;
+        color: #002855 !important;
+        line-height: 18px !important;
+        margin-right: 8px;
+    }
+
+    #gsi-target-hero-availability .gsi-avail__badge {
+        /* display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 2px 7px 3px 7px !important;
+        border-radius: 3px !important;
+        font-family: 'Noto Sans', Arial, sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        letter-spacing: 0.03em !important;
+        text-transform: uppercase !important;
+        vertical-align: middle !important; */
+        width: 69px !important;
+        height: 26px !important;
+        border-width: 1px !important;
+        angle: 0 deg !important;
+        opacity: 1 !important;
+        border-radius: 8px !important;
+        padding-top: 4px !important;
+        padding-right: 8px !important;
+        padding-bottom: 4px !important;
+        padding-left: 8px !important;
+        font-family: "Quicksand", "Lucida Grande", Verdana, sans-serif !important;
+        font-weight: 700 !important;
+        font-style: Bold !important;
+        font-size: 12px !important;
+        leading-trim: NONE !important;
+        line-height: 18px !important;
+        letter-spacing: 0% !important;
+        margin-right: 16px;
+    }
+
+    /* Status variants */
+    #gsi-target-hero-availability .gsi-avail__badge--available {
+        background: #C2F6AE !important;
+        border: 1px solid #8CD573 !important;
+        color: #1B5331 !important;
+    }
+
+    #gsi-target-hero-availability .gsi-avail__badge--limited,
+    #gsi-target-hero-availability .gsi-avail__badge--upcoming {
+        background: #FFE36F !important;
+        border: 1px solid #E6C854 !important;
+        color: #855404 !important;
+    }
+
+    #gsi-target-hero-availability .gsi-avail__badge--inquire {
+        background: #a5e7e5;
+        !important;
+        border: 1px solid #002855 !important;
+        color: #002855 !important;
+    }
+
+  .gsi-school-hero__details {
+    margin-bottom: 10px !important; 
+}
+
+    /* ----------------------------------------------------------
+   Mobile: < 840px
+   ---------------------------------------------------------- */
+    @media (max-width: 840px) {
+        #gsi-target-hero-availability {
+            margin: 24px 0 0 0 !important;
+        }
+
+        #gsi-target-hero-availability .gsi-avail__list {
+            gap: 8px !important;
+        }
+
+        /* #gsi-target-hero-availability .gsi-avail__item,
+        #gsi-target-hero-availability .gsi-avail__item:last-child {
+            margin: 0 !important;
+            padding: 0 !important;
+            border-right: 0 !important;
+        } */
+    }
+
+    /* ----------------------------------------------------------
+   Tablet right-of-col-one: 840px – 1184px
+   ---------------------------------------------------------- */
+    @media (min-width: 840px) and (max-width: 1184px) {
+
+        .gsi-school-hero__col-1 {
+            display: flex !important;
+        }
+
+        #gsi-target-hero-availability .gsi-avail__list {
+            gap: 16px !important;
+        }
+
+
+
+        /* #gsi-target-hero-availability {
+            position: absolute !important;
+            top: 32px !important;
+            right: 24px !important;
+            width: 43% !important;
+            max-width: 520px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            z-index: 2 !important;
+        }
+
+        #gsi-target-hero-availability .gsi-avail__list {
+            flex-wrap: wrap;
+        }
+
+        #gsi-target-hero-availability .gsi-avail__item,
+        #gsi-target-hero-availability .gsi-avail__item:last-child {
+            margin: 0 !important;
+            padding: 0 !important;
+            border-right: 0 !important;
+        } */
+    }
+
+    /* ----------------------------------------------------------
+   Below-row: 1185px – 1297px
+   ---------------------------------------------------------- */
+    /* @media (min-width: 1185px) and (max-width: 1297px) {
+        #gsi-target-hero-availability {
+            width: auto !important;
+            max-width: none !important;
+            margin: 18px 48px 0 48px !important;
+        }
+    }  */
+</style>
