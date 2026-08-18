@@ -47,7 +47,6 @@
                 .toLowerCase();
         }
 
-
         /* ============================================================
            1. HERO AVAILABILITY MODULE
            ============================================================ */
@@ -55,7 +54,6 @@
         var renderTimer = null;
         var observer = null;
         var pollTimer = null;
-
 
         function getDisplayProgram(programName) {
             var n = normalizeText(programName);
@@ -130,9 +128,43 @@
                 };
             }
 
+            if (
+                n === "summer at goddard" ||
+                n === "summer-at-goddard"
+            ) {
+                return {
+                    key: "summer-at-goddard",
+                    label: "Summer at Goddard",
+                    order: 8
+                };
+            }
+
+            if (
+                n === "before and after school" ||
+                n === "before & after school" ||
+                n === "before-and-after-school"
+            ) {
+                return {
+                    key: "before-and-after-school",
+                    label: "Before and After School",
+                    order: 9
+                };
+            }
+
+            if (
+                n === "school-age support" ||
+                n === "school age support" ||
+                n === "school-age-support"
+            ) {
+                return {
+                    key: "school-age-support",
+                    label: "School-Age Support",
+                    order: 10
+                };
+            }
+
             return null;
         }
-
 
         function getAvailabilityKey(availabilityEl) {
             if (!availabilityEl) return null;
@@ -177,20 +209,7 @@
             return null;
         }
 
-
-        /*
-         * Only programs with an actual availability flag
-         * in their classroom card are returned.
-         *
-         * Example:
-         *
-         * Infant       + available span -> SHOW
-         * Toddlers     + no span        -> DO NOT SHOW
-         * Twos         + available span -> SHOW
-         * Preschool    + upcoming span  -> SHOW
-         */
         function collectAvailabilityItems() {
-
             var selector = [
                 ".gsi-school-classroom-cards__availability.available",
                 ".gsi-school-classroom-cards__availability.limited",
@@ -202,20 +221,9 @@
 
             var grouped = {};
 
-
             Array.prototype.forEach.call(
                 flags,
                 function(availabilityEl) {
-
-                    /*
-                     * The flag lives inside:
-                     *
-                     * .gsi-image-card
-                     *   .gsi-image-card__content
-                     *      availability span
-                     *      h6 program name
-                     */
-
                     var content = null;
 
                     if (
@@ -228,9 +236,6 @@
                             );
                     }
 
-                    /*
-                     * Fallback for older browser behavior.
-                     */
                     if (!content) {
                         var node = availabilityEl.parentNode;
 
@@ -254,14 +259,12 @@
 
                     if (!content) return;
 
-
                     var titleEl =
                         content.querySelector(
                             CONFIG.cardTitleSelector
                         );
 
                     if (!titleEl) return;
-
 
                     var rawProgramName =
                         String(
@@ -271,7 +274,6 @@
                             .trim();
 
                     if (!rawProgramName) return;
-
 
                     var displayProgram =
                         getDisplayProgram(
@@ -286,7 +288,6 @@
                         return;
                     }
 
-
                     var statusKey =
                         getAvailabilityKey(
                             availabilityEl
@@ -294,21 +295,11 @@
 
                     if (!statusKey) return;
 
-
                     var priority =
                         CONFIG.statusPriority[
                             statusKey
                         ] || 0;
 
-
-                    /*
-                     * Slick can sometimes create duplicate carousel
-                     * markup. Grouping by program prevents duplicate
-                     * Hero rows.
-                     *
-                     * If duplicate statuses differ, retain the
-                     * highest-priority status.
-                     */
                     if (
                         !grouped[
                             displayProgram.key
@@ -345,7 +336,6 @@
                 }
             );
 
-
             return Object.keys(grouped)
                 .map(function(key) {
                     return grouped[key];
@@ -354,7 +344,6 @@
                     return a.order - b.order;
                 });
         }
-
 
         function getSignature(items) {
             return items
@@ -368,14 +357,7 @@
                 .join("|");
         }
 
-
         function getFormUrl() {
-
-            /*
-             * Primary:
-             * derive school URL from current path.
-             */
-
             var segments =
                 window.location.pathname
                     .split("/")
@@ -403,12 +385,6 @@
                     "/our-school/goddard-form"
                 );
             }
-
-
-            /*
-             * Fallback:
-             * Find another school link on the page.
-             */
 
             var links =
                 document.querySelectorAll(
@@ -462,9 +438,7 @@
             return null;
         }
 
-
         function createAvailabilityModule(items) {
-
             var root =
                 document.createElement(
                     "section"
@@ -481,11 +455,6 @@
                 "data-gsi-availability-signature",
                 getSignature(items)
             );
-
-
-            /*
-             * Heading
-             */
 
             var eyebrow =
                 document.createElement(
@@ -507,11 +476,6 @@
                 eyebrowText
             );
 
-
-            /*
-             * Program list
-             */
-
             var list =
                 document.createElement(
                     "div"
@@ -530,10 +494,8 @@
                 "true"
             );
 
-
             items.forEach(
                 function(item) {
-
                     var row =
                         document.createElement(
                             "div"
@@ -552,7 +514,6 @@
                         "true"
                     );
 
-
                     var program =
                         document.createElement(
                             "span"
@@ -563,7 +524,6 @@
 
                     program.textContent =
                         item.programName;
-
 
                     var badge =
                         document.createElement(
@@ -577,7 +537,6 @@
 
                     badge.textContent =
                         item.statusLabel;
-
 
                     row.appendChild(
                         program
@@ -593,11 +552,6 @@
                 }
             );
 
-
-            /*
-             * Disclaimer + CTA
-             */
-
             var disclaimer =
                 document.createElement(
                     "div"
@@ -606,10 +560,8 @@
             disclaimer.className =
                 "disclaimer-section";
 
-
             var formUrl =
                 getFormUrl();
-
 
             var linkHtml =
                 formUrl
@@ -624,13 +576,11 @@
                     :
                         "";
 
-
             disclaimer.innerHTML =
                 '<p class="disclaimer-text">' +
                     'Let’s find the right fit together! Reach out or schedule a tour to chat about classroom options.' +
                 '</p>' +
                 linkHtml;
-
 
             root.appendChild(
                 eyebrow
@@ -644,60 +594,45 @@
                 disclaimer
             );
 
-
             return root;
         }
-
 
         /* ============================================================
            HERO PLACEMENT
            ============================================================ */
 
         function placeModule(root) {
-
             if (!root) return false;
-
 
             var viewportWidth =
                 window.innerWidth ||
                 document.documentElement
                     .clientWidth;
 
-
             var heroRow =
                 document.querySelector(
                     CONFIG.heroRowSelector
                 );
-
 
             var heroColOne =
                 document.querySelector(
                     CONFIG.heroColOneSelector
                 );
 
-
             var programsAndRecognitions =
                 document.querySelector(
                     CONFIG.heroDefaultInsertAfterSelector
                 );
-
 
             var heroDetails =
                 document.querySelector(
                     ".gsi-school-hero__details"
                 );
 
-
             var hero =
                 document.querySelector(
                     ".gsi-school-hero"
                 );
-
-
-            /*
-             * Desktop-middle breakpoint:
-             * preserve original behavior.
-             */
 
             if (
                 viewportWidth >= 1185 &&
@@ -718,12 +653,6 @@
                 return true;
             }
 
-
-            /*
-             * Tablet:
-             * preserve original behavior.
-             */
-
             if (
                 viewportWidth >= 840 &&
                 viewportWidth <= 1184 &&
@@ -740,11 +669,6 @@
 
                 return true;
             }
-
-
-            /*
-             * Preferred default location.
-             */
 
             if (
                 programsAndRecognitions &&
@@ -766,12 +690,6 @@
                 return true;
             }
 
-
-            /*
-             * Fallback 1:
-             * insert after hero details.
-             */
-
             if (
                 heroDetails &&
                 heroDetails.parentNode
@@ -790,14 +708,7 @@
                 return true;
             }
 
-
-            /*
-             * Fallback 2:
-             * append inside first hero column.
-             */
-
             if (heroColOne) {
-
                 heroColOne.appendChild(
                     root
                 );
@@ -810,14 +721,7 @@
                 return true;
             }
 
-
-            /*
-             * Final fallback:
-             * append anywhere inside school Hero.
-             */
-
             if (hero) {
-
                 hero.appendChild(
                     root
                 );
@@ -830,46 +734,26 @@
                 return true;
             }
 
-
             return false;
         }
-
 
         /* ============================================================
            RENDER HERO MODULE
            ============================================================ */
 
         function renderAvailabilityModule() {
-
-            /*
-             * Collect availability FIRST.
-             *
-             * Do not require hero placement selectors
-             * before determining whether we have data.
-             */
-
             var items =
                 collectAvailabilityItems();
-
 
             var existing =
                 document.getElementById(
                     MODULE_ID
                 );
 
-
-            /*
-             * Keep original minimum:
-             * Module only displays when at least
-             * 3 qualifying programs have real
-             * availability statuses.
-             */
-
             if (
                 items.length <
                 CONFIG.minimumVisibleItems
             ) {
-
                 if (
                     existing &&
                     existing.parentNode
@@ -883,15 +767,8 @@
                 return false;
             }
 
-
             var signature =
                 getSignature(items);
-
-
-            /*
-             * Existing module already has
-             * the correct data.
-             */
 
             if (
                 existing &&
@@ -899,7 +776,6 @@
                     "data-gsi-availability-signature"
                 ) === signature
             ) {
-
                 placeModule(
                     existing
                 );
@@ -907,20 +783,10 @@
                 return true;
             }
 
-
-            /*
-             * Build updated module.
-             */
-
             var module =
                 createAvailabilityModule(
                     items
                 );
-
-
-            /*
-             * Remove old version first.
-             */
 
             if (
                 existing &&
@@ -932,19 +798,12 @@
                     );
             }
 
-
-            /*
-             * Place fresh module.
-             */
-
             return placeModule(
                 module
             );
         }
 
-
         function scheduleRender() {
-
             window.clearTimeout(
                 renderTimer
             );
@@ -956,25 +815,12 @@
                 );
         }
 
-
         function initHeroModule() {
-
-            /*
-             * Initial attempt.
-             */
-
             renderAvailabilityModule();
-
-
-            /*
-             * Continue polling while AEM / Slick /
-             * classroom cards finish rendering.
-             */
 
             pollTimer =
                 window.setInterval(
                     function() {
-
                         renderAvailabilityModule();
 
                         if (
@@ -990,21 +836,13 @@
                     300
                 );
 
-
-            /*
-             * MutationObserver catches dynamically
-             * inserted classroom carousel content.
-             */
-
             if (
                 window.MutationObserver &&
                 document.body
             ) {
-
                 observer =
                     new MutationObserver(
                         function() {
-
                             if (
                                 Date.now() -
                                     startedAt <=
@@ -1018,7 +856,6 @@
                         }
                     );
 
-
                 observer.observe(
                     document.body,
                     {
@@ -1027,10 +864,8 @@
                     }
                 );
 
-
                 window.setTimeout(
                     function() {
-
                         if (observer) {
                             observer.disconnect();
                         }
@@ -1039,15 +874,9 @@
                 );
             }
 
-
-            /*
-             * Re-place module at breakpoint changes.
-             */
-
             window.addEventListener(
                 "resize",
                 function() {
-
                     window.clearTimeout(
                         renderTimer
                     );
@@ -1055,7 +884,6 @@
                     renderTimer =
                         window.setTimeout(
                             function() {
-
                                 var root =
                                     document.getElementById(
                                         MODULE_ID
@@ -1073,30 +901,19 @@
             );
         }
 
-
         /* ============================================================
            2. ADOBE TARGET FLAG DETECTOR
            ============================================================ */
 
-        /*
-         * This tracking logic is intentionally left
-         * independent from the Hero rendering logic.
-         *
-         * It still reads the ORIGINAL classroom flags.
-         */
-
         var HAS_SENT = false;
         var targetStartedAt = null;
 
-
         function getAvailabilityStatusData() {
-
             var selector = [
                 ".gsi-school-classroom-cards__availability.available",
                 ".gsi-school-classroom-cards__availability.limited",
                 ".gsi-school-classroom-cards__availability.upcoming"
             ].join(",");
-
 
             var flags =
                 Array.prototype.slice.call(
@@ -1104,7 +921,6 @@
                         selector
                     )
                 );
-
 
             var data = {
                 flagsFound:
@@ -1123,10 +939,8 @@
                     []
             };
 
-
             flags.forEach(
                 function(flag) {
-
                     if (
                         flag.classList.contains(
                             "available"
@@ -1136,7 +950,6 @@
                             true;
                     }
 
-
                     if (
                         flag.classList.contains(
                             "limited"
@@ -1145,7 +958,6 @@
                         data.hasLimited =
                             true;
                     }
-
 
                     if (
                         flag.classList.contains(
@@ -1158,7 +970,6 @@
                 }
             );
 
-
             if (
                 data.hasAvailable
             ) {
@@ -1166,7 +977,6 @@
                     "available"
                 );
             }
-
 
             if (
                 data.hasLimited
@@ -1176,7 +986,6 @@
                 );
             }
 
-
             if (
                 data.hasUpcoming
             ) {
@@ -1185,15 +994,11 @@
                 );
             }
 
-
             return data;
         }
 
-
         function sendToTarget(data) {
-
             if (HAS_SENT) return;
-
 
             if (
                 !window.adobe ||
@@ -1205,19 +1010,16 @@
                 return;
             }
 
-
             if (
                 !data.statuses.length
             ) {
                 return;
             }
 
-
             var params = {
                 "profile.gsiHasAvailabilityFlag":
                     "true"
             };
-
 
             if (
                 data.hasAvailable
@@ -1227,7 +1029,6 @@
                 ] = "true";
             }
 
-
             if (
                 data.hasLimited
             ) {
@@ -1235,7 +1036,6 @@
                     "profile.gsiAvailabilityHasLimited"
                 ] = "true";
             }
-
 
             if (
                 data.hasUpcoming
@@ -1245,9 +1045,7 @@
                 ] = "true";
             }
 
-
             HAS_SENT = true;
-
 
             adobe.target.trackEvent({
                 mbox:
@@ -1258,11 +1056,8 @@
             });
         }
 
-
         function checkForFlags() {
-
             if (HAS_SENT) return;
-
 
             if (
                 targetStartedAt ===
@@ -1272,10 +1067,8 @@
                     Date.now();
             }
 
-
             var data =
                 getAvailabilityStatusData();
-
 
             if (
                 data.statuses.length
@@ -1286,7 +1079,6 @@
 
                 return;
             }
-
 
             if (
                 Date.now() -
@@ -1300,23 +1092,19 @@
             }
         }
 
-
         /* ============================================================
            3. FULLSTORY PAGE VARS
            ============================================================ */
 
         function initFullStory() {
-
             var fsInterval =
                 window.setInterval(
                     function() {
-
                         if (
                             window.FS &&
                             typeof FS.setVars ===
                                 "function"
                         ) {
-
                             FS.setVars(
                                 "page",
                                 {
@@ -1328,7 +1116,6 @@
                                 }
                             );
 
-
                             window.clearInterval(
                                 fsInterval
                             );
@@ -1338,33 +1125,25 @@
                 );
         }
 
-
         /* ============================================================
            BOOTSTRAP
            ============================================================ */
 
         function init() {
-
             initHeroModule();
-
             checkForFlags();
-
             initFullStory();
         }
-
 
         if (
             document.readyState ===
             "loading"
         ) {
-
             document.addEventListener(
                 "DOMContentLoaded",
                 init
             );
-
         } else {
-
             init();
         }
 
