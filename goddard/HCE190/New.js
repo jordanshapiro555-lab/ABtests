@@ -438,6 +438,83 @@
             return null;
         }
 
+        /* ============================================================
+           GET EXISTING PAGE CTA COPY
+           ============================================================ */
+
+        function getPrimaryCtaCopy() {
+            /*
+             * Prefer the CTA in the main school navigation/header.
+             * This avoids accidentally reading the CTA we create
+             * inside the availability module.
+             */
+            var preferredCta =
+                document.querySelector(
+                    ".gsi-school-navigation__call-to-action " +
+                    ".gsi-school-navigation__button-text"
+                );
+
+            if (preferredCta) {
+                var preferredText =
+                    String(
+                        preferredCta.textContent || ""
+                    )
+                        .replace(/\s+/g, " ")
+                        .trim();
+
+                if (preferredText) {
+                    return preferredText;
+                }
+            }
+
+            /*
+             * Fallback: inspect all matching CTA text elements,
+             * but ignore anything inside our availability module.
+             */
+            var ctaTexts =
+                document.querySelectorAll(
+                    ".gsi-school-navigation__button-text"
+                );
+
+            for (
+                var i = 0;
+                i < ctaTexts.length;
+                i++
+            ) {
+                var ctaTextEl =
+                    ctaTexts[i];
+
+                if (
+                    ctaTextEl.closest &&
+                    ctaTextEl.closest(
+                        "#" + MODULE_ID
+                    )
+                ) {
+                    continue;
+                }
+
+                var text =
+                    String(
+                        ctaTextEl.textContent || ""
+                    )
+                        .replace(/\s+/g, " ")
+                        .trim();
+
+                if (
+                    text === "Learn More & Tour" ||
+                    text === "Tell Me More"
+                ) {
+                    return text;
+                }
+            }
+
+            /*
+             * Safe fallback if the site's main CTA
+             * hasn't rendered yet.
+             */
+            return "Learn More & Tour";
+        }
+
         function createAvailabilityModule(items) {
             var root =
                 document.createElement(
@@ -563,6 +640,9 @@
             var formUrl =
                 getFormUrl();
 
+            var ctaCopy =
+                getPrimaryCtaCopy();
+
             var linkHtml =
                 formUrl
                     ?
@@ -570,7 +650,7 @@
                         formUrl +
                         '" class="gsi-school-navigation__button">' +
                             '<span class="gsi-school-navigation__button-text">' +
-                                'Informations & Tours' +
+                                ctaCopy +
                             '</span>' +
                         '</a>'
                     :
@@ -776,6 +856,20 @@
                     "data-gsi-availability-signature"
                 ) === signature
             ) {
+                /*
+                 * Keep CTA copy synchronized even when the
+                 * availability signature hasn't changed.
+                 */
+                var existingCtaText =
+                    existing.querySelector(
+                        ".gsi-school-navigation__button-text"
+                    );
+
+                if (existingCtaText) {
+                    existingCtaText.textContent =
+                        getPrimaryCtaCopy();
+                }
+
                 placeModule(
                     existing
                 );
@@ -860,7 +954,8 @@
                     document.body,
                     {
                         childList: true,
-                        subtree: true
+                        subtree: true,
+                        characterData: true
                     }
                 );
 
