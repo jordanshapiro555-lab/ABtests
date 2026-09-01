@@ -1,221 +1,31 @@
 <script id="exp-spectrum-no-contracts-badge" type="html/js">
-(function () {
+    (function () {
   'use strict';
 
   var BADGE_ID = 'exp-spectrum-no-contracts-badge-element';
-  var STYLE_ID = 'exp-spectrum-no-contracts-badge-styles';
+
 
   /* =========================================================
-     ADD STYLES
+     HELPERS
      ========================================================= */
 
-  function addStyles() {
-    if (document.getElementById(STYLE_ID)) return;
+  function setStyle(el, prop, value) {
+    if (!el) return;
 
-    var style = document.createElement('style');
-    style.id = STYLE_ID;
-
-    style.textContent = `
-      /* =====================================================
-         HERO POSITIONING
-         ===================================================== */
-
-      pex-pl-hero {
-        position: relative !important;
-      }
-
-      #${BADGE_ID} {
-        position: absolute !important;
-        z-index: 50 !important;
-
-        box-sizing: border-box !important;
-
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-
-        width: 142px !important;
-        height: 142px !important;
-
-        border: 3px solid #0066ff !important;
-        border-radius: 50% !important;
-
-        background: rgba(255, 255, 255, 0.96) !important;
-
-        color: #001b44 !important;
-        text-align: center !important;
-
-        box-shadow:
-          0 1px 2px rgba(0,0,0,.08),
-          0 0 0 5px rgba(255,255,255,.85) !important;
-
-        font-family: Arial, Helvetica, sans-serif !important;
-
-        pointer-events: none !important;
-      }
-
-      #${BADGE_ID} .exp-spectrum-badge__section {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-
-        width: 100% !important;
-      }
-
-      #${BADGE_ID} .exp-spectrum-badge__divider {
-        width: 86px !important;
-        height: 1px !important;
-        margin: 7px 0 !important;
-        background: #0066ff !important;
-      }
-
-      #${BADGE_ID} .exp-spectrum-badge__icon {
-        width: 25px !important;
-        height: 25px !important;
-
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-
-        margin: 0 auto 2px !important;
-      }
-
-      #${BADGE_ID} .exp-spectrum-badge__icon svg {
-        display: block !important;
-        width: 100% !important;
-        height: 100% !important;
-
-        stroke: #0037ff !important;
-        fill: none !important;
-
-        stroke-width: 2 !important;
-        stroke-linecap: round !important;
-        stroke-linejoin: round !important;
-      }
-
-      #${BADGE_ID} .exp-spectrum-badge__label {
-        display: block !important;
-
-        margin: 0 !important;
-        padding: 0 !important;
-
-        font-size: 11px !important;
-        line-height: 12px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0 !important;
-
-        color: #001b44 !important;
-      }
+    el.style.setProperty(
+      prop,
+      value,
+      'important'
+    );
+  }
 
 
-      /* =====================================================
-         DESKTOP
-         1024px+
-         ===================================================== */
-
-      @media (min-width: 1024px) {
-
-        #${BADGE_ID} {
-          top: 27px !important;
-          right: 24px !important;
-
-          width: 142px !important;
-          height: 142px !important;
-        }
-
-      }
-
-
-      /* =====================================================
-         TABLET
-         768px - 1023px
-         ===================================================== */
-
-      @media (min-width: 768px) and (max-width: 1023px) {
-
-        #${BADGE_ID} {
-          top: 22px !important;
-          right: 20px !important;
-
-          width: 124px !important;
-          height: 124px !important;
-
-          border-width: 2px !important;
-
-          box-shadow:
-            0 1px 2px rgba(0,0,0,.08),
-            0 0 0 4px rgba(255,255,255,.85) !important;
-        }
-
-        #${BADGE_ID} .exp-spectrum-badge__icon {
-          width: 21px !important;
-          height: 21px !important;
-        }
-
-        #${BADGE_ID} .exp-spectrum-badge__label {
-          font-size: 9.5px !important;
-          line-height: 10.5px !important;
-        }
-
-        #${BADGE_ID} .exp-spectrum-badge__divider {
-          width: 72px !important;
-          margin: 5px 0 !important;
-        }
-
-      }
-
-
-      /* =====================================================
-         MOBILE
-         <= 767px
-
-         On Spectrum mobile the hero image sits ABOVE the text,
-         so badge remains attached to the image rather than the
-         text portion of the hero.
-         ===================================================== */
-
-      @media (max-width: 767px) {
-
-        pex-pl-hero-image {
-          position: relative !important;
-        }
-
-        #${BADGE_ID} {
-          top: 10px !important;
-          right: 10px !important;
-
-          width: 94px !important;
-          height: 94px !important;
-
-          border-width: 2px !important;
-
-          box-shadow:
-            0 1px 2px rgba(0,0,0,.08),
-            0 0 0 3px rgba(255,255,255,.9) !important;
-        }
-
-        #${BADGE_ID} .exp-spectrum-badge__icon {
-          width: 16px !important;
-          height: 16px !important;
-          margin-bottom: 0 !important;
-        }
-
-        #${BADGE_ID} .exp-spectrum-badge__label {
-          font-size: 7px !important;
-          line-height: 7.5px !important;
-        }
-
-        #${BADGE_ID} .exp-spectrum-badge__divider {
-          width: 54px !important;
-          margin: 3px 0 !important;
-        }
-
-      }
-    `;
-
-    document.head.appendChild(style);
+  function getWidth() {
+    return (
+      window.innerWidth ||
+      document.documentElement.clientWidth ||
+      1200
+    );
   }
 
 
@@ -223,37 +33,124 @@
      ICONS
      ========================================================= */
 
-  function contractIcon() {
-    return (
-      '<svg viewBox="0 0 32 32" aria-hidden="true">' +
-        '<path d="M7 9l5-5h8l5 5-4 4-5-4-5 4z"></path>' +
-        '<path d="M11 13l-3 3 8 8 8-8-3-3"></path>' +
-        '<path d="M12 4l4 5 4-5"></path>' +
-      '</svg>'
-    );
+  function createContractsIcon() {
+    var wrap = document.createElement('div');
+
+    wrap.innerHTML =
+      '<svg viewBox="0 0 32 32" ' +
+      'xmlns="http://www.w3.org/2000/svg" ' +
+      'width="24" height="24" ' +
+      'fill="none" ' +
+      'stroke="#0037ff" ' +
+      'stroke-width="2" ' +
+      'stroke-linecap="round" ' +
+      'stroke-linejoin="round" ' +
+      'aria-hidden="true">' +
+
+        '<path d="M6 11l5-5h5l3 3 3-3 4 5-5 5-5-4-5 4z"></path>' +
+        '<path d="M11 16l5 5 5-5"></path>' +
+
+      '</svg>';
+
+    return wrap.firstChild;
   }
 
 
-  function calendarIcon() {
-    return (
-      '<svg viewBox="0 0 32 32" aria-hidden="true">' +
+  function createCalendarIcon() {
+    var wrap = document.createElement('div');
+
+    wrap.innerHTML =
+      '<svg viewBox="0 0 32 32" ' +
+      'xmlns="http://www.w3.org/2000/svg" ' +
+      'width="24" height="24" ' +
+      'fill="none" ' +
+      'stroke="#0037ff" ' +
+      'stroke-width="2" ' +
+      'stroke-linecap="round" ' +
+      'stroke-linejoin="round" ' +
+      'aria-hidden="true">' +
+
         '<rect x="5" y="7" width="22" height="20" rx="2"></rect>' +
         '<path d="M5 12h22"></path>' +
         '<path d="M10 4v6"></path>' +
         '<path d="M22 4v6"></path>' +
-        '<path d="M10 16h3"></path>' +
-        '<path d="M15 16h3"></path>' +
-        '<path d="M20 16h3"></path>' +
-        '<path d="M10 21h3"></path>' +
-        '<path d="M15 21h3"></path>' +
-        '<path d="M20 21h3"></path>' +
-      '</svg>'
-    );
+        '<path d="M10 17h3"></path>' +
+        '<path d="M15 17h3"></path>' +
+        '<path d="M20 17h3"></path>' +
+        '<path d="M10 22h3"></path>' +
+        '<path d="M15 22h3"></path>' +
+        '<path d="M20 22h3"></path>' +
+
+      '</svg>';
+
+    return wrap.firstChild;
   }
 
 
   /* =========================================================
-     BUILD BADGE
+     CREATE SECTION
+     ========================================================= */
+
+  function createSection(icon, line1, line2) {
+    var section = document.createElement('div');
+
+    setStyle(section, 'display', 'flex');
+    setStyle(section, 'flex-direction', 'column');
+    setStyle(section, 'align-items', 'center');
+    setStyle(section, 'justify-content', 'center');
+    setStyle(section, 'width', '100%');
+    setStyle(section, 'margin', '0');
+    setStyle(section, 'padding', '0');
+    setStyle(section, 'box-sizing', 'border-box');
+
+
+    var iconWrap = document.createElement('div');
+
+    setStyle(iconWrap, 'display', 'flex');
+    setStyle(iconWrap, 'align-items', 'center');
+    setStyle(iconWrap, 'justify-content', 'center');
+    setStyle(iconWrap, 'width', '24px');
+    setStyle(iconWrap, 'height', '24px');
+    setStyle(iconWrap, 'margin', '0 0 1px 0');
+    setStyle(iconWrap, 'padding', '0');
+
+    iconWrap.appendChild(icon);
+
+
+    var text = document.createElement('div');
+
+    text.innerHTML =
+      line1 + '<br>' + line2;
+
+    setStyle(text, 'display', 'block');
+    setStyle(text, 'margin', '0');
+    setStyle(text, 'padding', '0');
+
+    setStyle(
+      text,
+      'font-family',
+      'Arial, Helvetica, sans-serif'
+    );
+
+    setStyle(text, 'font-size', '10px');
+    setStyle(text, 'line-height', '11px');
+    setStyle(text, 'font-weight', '700');
+
+    setStyle(text, 'color', '#001b44');
+    setStyle(text, 'text-align', 'center');
+    setStyle(text, 'letter-spacing', '0');
+    setStyle(text, 'white-space', 'nowrap');
+
+
+    section.appendChild(iconWrap);
+    section.appendChild(text);
+
+    return section;
+  }
+
+
+  /* =========================================================
+     CREATE BADGE
      ========================================================= */
 
   function buildBadge() {
@@ -266,87 +163,353 @@
       'No contracts. No commitments.'
     );
 
-    badge.innerHTML =
-      '<div class="exp-spectrum-badge__section">' +
-        '<div class="exp-spectrum-badge__icon">' +
-          contractIcon() +
-        '</div>' +
-        '<span class="exp-spectrum-badge__label">' +
-          'NO<br>CONTRACTS' +
-        '</span>' +
-      '</div>' +
 
-      '<div class="exp-spectrum-badge__divider"></div>' +
+    var topSection = createSection(
+      createContractsIcon(),
+      'NO',
+      'CONTRACTS'
+    );
 
-      '<div class="exp-spectrum-badge__section">' +
-        '<div class="exp-spectrum-badge__icon">' +
-          calendarIcon() +
-        '</div>' +
-        '<span class="exp-spectrum-badge__label">' +
-          'NO<br>COMMITMENTS' +
-        '</span>' +
-      '</div>';
+
+    var divider = document.createElement('div');
+
+    setStyle(divider, 'display', 'block');
+    setStyle(divider, 'width', '72px');
+    setStyle(divider, 'height', '1px');
+    setStyle(divider, 'min-height', '1px');
+    setStyle(divider, 'margin', '5px 0');
+    setStyle(divider, 'padding', '0');
+    setStyle(divider, 'background', '#0066ff');
+
+
+    var bottomSection = createSection(
+      createCalendarIcon(),
+      'NO',
+      'COMMITMENTS'
+    );
+
+
+    badge.appendChild(topSection);
+    badge.appendChild(divider);
+    badge.appendChild(bottomSection);
 
     return badge;
   }
 
 
   /* =========================================================
-     RESPONSIVE PLACEMENT
+     BASE BADGE STYLES
      ========================================================= */
 
-  function placeBadge() {
-    var hero = document.querySelector(
-      '.pex-pl-hero-container pex-pl-hero'
+  function applyBaseStyles(badge) {
+    setStyle(badge, 'position', 'absolute');
+    setStyle(badge, 'z-index', '9999');
+
+    setStyle(badge, 'display', 'flex');
+    setStyle(badge, 'flex-direction', 'column');
+    setStyle(badge, 'align-items', 'center');
+    setStyle(badge, 'justify-content', 'center');
+
+    setStyle(badge, 'box-sizing', 'border-box');
+
+    setStyle(badge, 'margin', '0');
+    setStyle(badge, 'padding', '10px');
+
+    setStyle(badge, 'background', '#ffffff');
+
+    setStyle(
+      badge,
+      'border',
+      '2px solid #0066ff'
     );
+
+    setStyle(badge, 'border-radius', '50%');
+
+    setStyle(
+      badge,
+      'box-shadow',
+      '0 0 0 4px rgba(255,255,255,.88)'
+    );
+
+    setStyle(badge, 'overflow', 'hidden');
+
+    /*
+     * Critical:
+     * badge must NEVER block hero interaction.
+     */
+    setStyle(badge, 'pointer-events', 'none');
+
+    setStyle(badge, 'visibility', 'visible');
+    setStyle(badge, 'opacity', '1');
+  }
+
+
+  /* =========================================================
+     SIZE CHILDREN
+     ========================================================= */
+
+  function sizeChildren(badge, mode) {
+    if (!badge) return;
+
+    var sections = [
+      badge.children[0],
+      badge.children[2]
+    ];
+
+    var divider = badge.children[1];
+
+
+    Array.prototype.forEach.call(
+      sections,
+      function (section) {
+        if (!section) return;
+
+        var iconWrap = section.children[0];
+        var text = section.children[1];
+        var svg = iconWrap
+          ? iconWrap.querySelector('svg')
+          : null;
+
+
+        if (mode === 'mobile') {
+
+          setStyle(iconWrap, 'width', '17px');
+          setStyle(iconWrap, 'height', '17px');
+
+          if (svg) {
+            svg.setAttribute('width', '17');
+            svg.setAttribute('height', '17');
+          }
+
+          setStyle(text, 'font-size', '7px');
+          setStyle(text, 'line-height', '7.5px');
+
+
+        } else if (mode === 'tablet') {
+
+          setStyle(iconWrap, 'width', '20px');
+          setStyle(iconWrap, 'height', '20px');
+
+          if (svg) {
+            svg.setAttribute('width', '20');
+            svg.setAttribute('height', '20');
+          }
+
+          setStyle(text, 'font-size', '8.5px');
+          setStyle(text, 'line-height', '9px');
+
+
+        } else {
+
+          setStyle(iconWrap, 'width', '24px');
+          setStyle(iconWrap, 'height', '24px');
+
+          if (svg) {
+            svg.setAttribute('width', '24');
+            svg.setAttribute('height', '24');
+          }
+
+          setStyle(text, 'font-size', '10px');
+          setStyle(text, 'line-height', '11px');
+        }
+      }
+    );
+
+
+    if (mode === 'mobile') {
+
+      setStyle(divider, 'width', '50px');
+      setStyle(divider, 'margin', '3px 0');
+
+
+    } else if (mode === 'tablet') {
+
+      setStyle(divider, 'width', '62px');
+      setStyle(divider, 'margin', '4px 0');
+
+
+    } else {
+
+      setStyle(divider, 'width', '72px');
+      setStyle(divider, 'margin', '5px 0');
+
+    }
+  }
+
+
+  /* =========================================================
+     DESKTOP
+     ========================================================= */
+
+  function applyDesktop(badge, hero) {
+    if (badge.parentNode !== hero) {
+      hero.appendChild(badge);
+    }
+
+    setStyle(hero, 'position', 'relative');
+
+
+    applyBaseStyles(badge);
+    sizeChildren(badge, 'desktop');
+
+
+    setStyle(badge, 'width', '140px');
+    setStyle(badge, 'height', '140px');
+
+    setStyle(badge, 'top', '22px');
+    setStyle(badge, 'right', '24px');
+
+    setStyle(badge, 'left', 'auto');
+    setStyle(badge, 'bottom', 'auto');
+
+    setStyle(badge, 'transform', 'none');
+  }
+
+
+  /* =========================================================
+     TABLET
+     ========================================================= */
+
+  function applyTablet(badge, hero) {
+    if (badge.parentNode !== hero) {
+      hero.appendChild(badge);
+    }
+
+    setStyle(hero, 'position', 'relative');
+
+
+    applyBaseStyles(badge);
+    sizeChildren(badge, 'tablet');
+
+
+    setStyle(badge, 'width', '116px');
+    setStyle(badge, 'height', '116px');
+
+    setStyle(badge, 'top', '18px');
+    setStyle(badge, 'right', '18px');
+
+    setStyle(badge, 'left', 'auto');
+    setStyle(badge, 'bottom', 'auto');
+
+    setStyle(badge, 'transform', 'none');
+  }
+
+
+  /* =========================================================
+     MOBILE
+     ========================================================= */
+
+  function applyMobile(badge, hero) {
+    var heroImage =
+      hero.querySelector('pex-pl-hero-image');
+
+    /*
+     * Use the actual image wrapper as positioning context.
+     */
+    if (heroImage) {
+
+      setStyle(
+        heroImage,
+        'position',
+        'relative'
+      );
+
+      if (badge.parentNode !== heroImage) {
+        heroImage.appendChild(badge);
+      }
+
+    } else {
+
+      setStyle(hero, 'position', 'relative');
+
+      if (badge.parentNode !== hero) {
+        hero.appendChild(badge);
+      }
+
+    }
+
+
+    applyBaseStyles(badge);
+    sizeChildren(badge, 'mobile');
+
+
+    /*
+     * Matches the mobile comp:
+     * small circle tucked into upper-right of photo.
+     */
+    setStyle(badge, 'width', '88px');
+    setStyle(badge, 'height', '88px');
+
+    setStyle(badge, 'padding', '7px');
+
+    setStyle(badge, 'top', '10px');
+    setStyle(badge, 'right', '10px');
+
+    setStyle(badge, 'left', 'auto');
+    setStyle(badge, 'bottom', 'auto');
+
+    setStyle(badge, 'transform', 'none');
+
+    setStyle(
+      badge,
+      'box-shadow',
+      '0 0 0 3px rgba(255,255,255,.9)'
+    );
+  }
+
+
+  /* =========================================================
+     RESPONSIVE
+     ========================================================= */
+
+  function applyResponsiveLayout() {
+    var hero =
+      document.querySelector(
+        '.pex-pl-hero-container pex-pl-hero'
+      );
 
     if (!hero) {
       return false;
     }
 
-    var badge = document.getElementById(BADGE_ID);
+
+    var badge =
+      document.getElementById(BADGE_ID);
+
 
     if (!badge) {
       badge = buildBadge();
     }
 
-    var width =
-      window.innerWidth ||
-      document.documentElement.clientWidth;
+
+    var width = getWidth();
 
 
-    /*
-     * MOBILE
-     *
-     * Put the badge inside pex-pl-hero-image so it stays
-     * attached to the photo exactly like the mockup.
-     */
     if (width <= 767) {
 
-      var heroImage = hero.querySelector(
-        'pex-pl-hero-image'
+      applyMobile(
+        badge,
+        hero
       );
 
-      if (heroImage) {
 
-        if (badge.parentNode !== heroImage) {
-          heroImage.appendChild(badge);
-        }
+    } else if (width <= 1023) {
 
-        return true;
-      }
+      applyTablet(
+        badge,
+        hero
+      );
+
+
+    } else {
+
+      applyDesktop(
+        badge,
+        hero
+      );
+
     }
 
-
-    /*
-     * TABLET / DESKTOP
-     *
-     * Attach badge directly to the hero so top/right
-     * positioning is relative to the entire hero.
-     */
-    if (badge.parentNode !== hero) {
-      hero.appendChild(badge);
-    }
 
     return true;
   }
@@ -357,51 +520,50 @@
      ========================================================= */
 
   function initExperiment() {
-    addStyles();
 
-    placeBadge();
+    applyResponsiveLayout();
 
 
     /*
-     * Spectrum is Angular-based and can redraw this hero
-     * after Adobe Target initially executes.
-     *
-     * Re-check for ~15 seconds so the experiment survives
-     * those redraws.
+     * Spectrum Angular re-render protection
      */
     var attempts = 0;
     var MAX_ATTEMPTS = 75;
 
-    var interval = setInterval(function () {
+    var interval =
+      setInterval(function () {
 
-      attempts++;
+        attempts++;
 
-      addStyles();
-      placeBadge();
+        applyResponsiveLayout();
 
-      if (attempts >= MAX_ATTEMPTS) {
-        clearInterval(interval);
-      }
 
-    }, 200);
+        if (attempts >= MAX_ATTEMPTS) {
+          clearInterval(interval);
+        }
+
+      }, 200);
 
 
     /*
-     * Move badge between image/hero when viewport crosses
-     * the mobile breakpoint.
+     * Responsive changes
      */
     var resizeTimer;
 
-    window.addEventListener('resize', function () {
+    window.addEventListener(
+      'resize',
+      function () {
 
-      clearTimeout(resizeTimer);
+        clearTimeout(resizeTimer);
 
-      resizeTimer = setTimeout(
-        placeBadge,
-        100
-      );
+        resizeTimer =
+          setTimeout(
+            applyResponsiveLayout,
+            100
+          );
 
-    });
+      }
+    );
   }
 
 
