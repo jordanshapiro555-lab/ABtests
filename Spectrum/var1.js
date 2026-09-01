@@ -1,5 +1,5 @@
 <script id="no-commitment" type="html/js">
-    (function () {
+(function () {
   function initExperiment() {
     var hero = document.querySelector('pex-pl-hero-content');
     if (!hero) {
@@ -11,16 +11,18 @@
 
     // 1. Update the eyebrow
     var eyebrow = hero.querySelector('nova-type-stack-eyebrow');
-    if (eyebrow) eyebrow.textContent = 'SPECTRUM INTERNET® GIG';
+    if (eyebrow) {
+      eyebrow.textContent = 'SPECTRUM INTERNET® GIG';
+    }
 
-    // 2. Update the headline
-    var title = hero.querySelector('.nova-type-stack-hero-title-large');
-    if (title) title.textContent = 'Fast, reliable Internet you can count on';
+    // 2. Leave the existing headline unchanged:
+    // "Reliable speed for $60/mo"
 
     // 3. Update the paragraph
     var para = hero.querySelector('.nova-type-stack-paragraph');
     if (para) {
-      para.textContent = 'Get reliable Internet with no contracts and the freedom to change or cancel anytime.';
+      para.textContent =
+        'Get reliable Internet with no contracts and the freedom to change or cancel anytime.';
     }
 
     // 4. Build the trust element ("No contracts or commitments")
@@ -37,11 +39,13 @@
 
     // 5. Insert the trust element ABOVE the paragraph
     var paraWrap = hero.querySelector('nova-type-stack-paragraph');
+
     if (paraWrap && paraWrap.parentNode) {
       paraWrap.parentNode.insertBefore(trust, paraWrap);
     } else {
-      // fallback: before the actions
+      // Fallback: insert before the actions
       var actions = hero.querySelector('nova-type-stack-actions');
+
       if (actions && actions.parentNode) {
         actions.parentNode.insertBefore(trust, actions);
       }
