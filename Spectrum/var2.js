@@ -4,272 +4,473 @@
 
   var BANNER_ID = 'exp-spectrum-benefit-banner';
 
-  function iconSvg(type) {
-    if (type === 'contracts') {
-      return `
-        <svg viewBox="0 0 40 40"
-             style="width:34px;height:34px;display:block;fill:none;stroke:#0037ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;">
-          <path d="M12 7.5a14 14 0 1 0 17.5 3"></path>
-          <path d="M12 3.5v8h8"></path>
-          <text x="20" y="24"
-                text-anchor="middle"
-                fill="#0037ff"
-                stroke="none"
-                font-size="10"
-                font-family="Arial, sans-serif"
-                font-weight="700">$0</text>
-        </svg>`;
-    }
+  /*
+   * SVG icons encoded as data URLs.
+   * These render as BACKGROUNDS rather than nested <svg> elements,
+   * which avoids Spectrum's component styling entirely.
+   */
 
-    if (type === 'calendar') {
-      return `
-        <svg viewBox="0 0 40 40"
-             style="width:34px;height:34px;display:block;fill:none;stroke:#0037ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;">
-          <rect x="7" y="10" width="26" height="24" rx="1"></rect>
-          <path d="M7 16h26"></path>
-          <path d="M13 6v8"></path>
-          <path d="M27 6v8"></path>
-          <path d="M13 21h3"></path>
-          <path d="M19 21h3"></path>
-          <path d="M25 21h3"></path>
-          <path d="M13 27h3"></path>
-          <path d="M19 27h3"></path>
-          <path d="M25 27h3"></path>
-        </svg>`;
-    }
-
-    if (type === 'tag') {
-      return `
-        <svg viewBox="0 0 40 40"
-             style="width:34px;height:34px;display:block;fill:none;stroke:#0037ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;">
-          <path d="M7 20L20 7h12v12L19 32 7 20z"></path>
-          <circle cx="26.5" cy="12.5" r="2"></circle>
-          <path d="M15 19h8"></path>
-          <path d="M19 15v8"></path>
-        </svg>`;
-    }
-
-    return `
-      <svg viewBox="0 0 40 40"
-           style="width:34px;height:34px;display:block;fill:none;stroke:#0037ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;">
-        <path d="M13 18v16H7V18h6z"></path>
-        <path d="M13 31h15c2 0 3.5-1 4.2-2.7l3.3-8.2c.8-2-.7-4.1-2.9-4.1H25l1-6c.3-2-1.2-4-3.3-4H21l-8 12"></path>
-      </svg>`;
-  }
+  var ICON_CONTRACTS =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E" +
+    "%3Cg fill='none' stroke='%230037ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E" +
+    "%3Cpath d='M12 7.5a14 14 0 1 0 17.5 3'/%3E" +
+    "%3Cpath d='M12 3.5v8h8'/%3E" +
+    "%3C/g%3E" +
+    "%3Ctext x='20' y='24' text-anchor='middle' fill='%230037ff' font-size='10' font-family='Arial' font-weight='700'%3E%240%3C/text%3E" +
+    "%3C/svg%3E\")";
 
 
-  function makeItem(icon, line1, line2, hasDivider) {
+  var ICON_CALENDAR =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E" +
+    "%3Cg fill='none' stroke='%230037ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E" +
+    "%3Crect x='7' y='10' width='26' height='24' rx='1'/%3E" +
+    "%3Cpath d='M7 16h26M13 6v8M27 6v8M13 21h3M19 21h3M25 21h3M13 27h3M19 27h3M25 27h3'/%3E" +
+    "%3C/g%3E" +
+    "%3C/svg%3E\")";
+
+
+  var ICON_TAG =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E" +
+    "%3Cg fill='none' stroke='%230037ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E" +
+    "%3Cpath d='M7 20L20 7h12v12L19 32 7 20z'/%3E" +
+    "%3Ccircle cx='26.5' cy='12.5' r='2'/%3E" +
+    "%3Cpath d='M15 19h8M19 15v8'/%3E" +
+    "%3C/g%3E" +
+    "%3C/svg%3E\")";
+
+
+  var ICON_THUMB =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E" +
+    "%3Cg fill='none' stroke='%230037ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E" +
+    "%3Cpath d='M13 18v16H7V18h6z'/%3E" +
+    "%3Cpath d='M13 31h15c2 0 3.5-1 4.2-2.7l3.3-8.2c.8-2-.7-4.1-2.9-4.1H25l1-6c.3-2-1.2-4-3.3-4H21l-8 12'/%3E" +
+    "%3C/g%3E" +
+    "%3C/svg%3E\")";
+
+
+  function makeItem(text, icon, divider) {
+
     var item = document.createElement('div');
 
-    item.style.cssText = [
-      'display:flex!important',
-      'flex-direction:row!important',
-      'align-items:center!important',
-      'flex:1 1 25%!important',
-      'min-width:0!important',
-      'gap:16px!important',
-      'padding:0 28px!important',
-      'box-sizing:border-box!important',
-      hasDivider ? 'border-left:1px solid #dedede!important' : ''
-    ].join(';');
+    /*
+     * IMPORTANT:
+     * Direct text only.
+     *
+     * No spans.
+     * No nested divs.
+     * No nested SVG.
+     */
+    item.textContent = text;
 
-    item.innerHTML = `
-      <div style="
-        flex:0 0 36px!important;
-        width:36px!important;
-        height:36px!important;
-        display:flex!important;
-        align-items:center!important;
-        justify-content:center!important;
-      ">
-        ${iconSvg(icon)}
-      </div>
+    item.style.setProperty(
+      'display',
+      'flex',
+      'important'
+    );
 
-      <div style="
-        display:block!important;
-        min-width:0!important;
-        font-family:inherit!important;
-        font-size:14px!important;
-        line-height:1.35!important;
-        font-weight:500!important;
-        color:#111!important;
-        white-space:normal!important;
-      ">
-        <span style="display:block!important;white-space:nowrap!important;">${line1}</span>
-        <span style="display:block!important;white-space:nowrap!important;">${line2}</span>
-      </div>
-    `;
+    item.style.setProperty(
+      'align-items',
+      'center',
+      'important'
+    );
+
+    item.style.setProperty(
+      'flex',
+      '1 1 25%',
+      'important'
+    );
+
+    item.style.setProperty(
+      'min-width',
+      '0',
+      'important'
+    );
+
+    item.style.setProperty(
+      'height',
+      '40px',
+      'important'
+    );
+
+    item.style.setProperty(
+      'box-sizing',
+      'border-box',
+      'important'
+    );
+
+    /*
+     * Space on left for background icon.
+     */
+    item.style.setProperty(
+      'padding',
+      '0 24px 0 66px',
+      'important'
+    );
+
+    item.style.setProperty(
+      'margin',
+      '0',
+      'important'
+    );
+
+    /*
+     * Text
+     */
+    item.style.setProperty(
+      'font-family',
+      'Arial, Helvetica, sans-serif',
+      'important'
+    );
+
+    item.style.setProperty(
+      'font-size',
+      '14px',
+      'important'
+    );
+
+    item.style.setProperty(
+      'font-weight',
+      '400',
+      'important'
+    );
+
+    item.style.setProperty(
+      'line-height',
+      '19px',
+      'important'
+    );
+
+    item.style.setProperty(
+      'color',
+      '#111111',
+      'important'
+    );
+
+    item.style.setProperty(
+      'visibility',
+      'visible',
+      'important'
+    );
+
+    item.style.setProperty(
+      'opacity',
+      '1',
+      'important'
+    );
+
+    /*
+     * \n becomes a deliberate second line.
+     */
+    item.style.setProperty(
+      'white-space',
+      'pre-line',
+      'important'
+    );
+
+    /*
+     * Icon is a background image on THIS SAME ELEMENT.
+     */
+    item.style.setProperty(
+      'background-image',
+      icon,
+      'important'
+    );
+
+    item.style.setProperty(
+      'background-repeat',
+      'no-repeat',
+      'important'
+    );
+
+    item.style.setProperty(
+      'background-position',
+      '24px center',
+      'important'
+    );
+
+    item.style.setProperty(
+      'background-size',
+      '34px 34px',
+      'important'
+    );
+
+    if (divider) {
+      item.style.setProperty(
+        'border-left',
+        '1px solid #dedede',
+        'important'
+      );
+    }
 
     return item;
   }
 
 
   function buildBanner() {
+
     var banner = document.createElement('div');
 
     banner.id = BANNER_ID;
 
-    banner.style.cssText = [
-      'position:absolute!important',
-      'left:50%!important',
-      'bottom:18px!important',
-      'transform:translateX(-50%)!important',
-      'z-index:99999!important',
+    /*
+     * Exact desktop card positioning that is already working
+     * in your latest screenshot.
+     */
+    banner.style.setProperty(
+      'position',
+      'absolute',
+      'important'
+    );
 
-      'display:flex!important',
-      'flex-direction:row!important',
-      'align-items:center!important',
+    banner.style.setProperty(
+      'left',
+      '50%',
+      'important'
+    );
 
-      'width:calc(100% - 160px)!important',
-      'max-width:1100px!important',
-      'min-height:76px!important',
+    banner.style.setProperty(
+      'bottom',
+      '18px',
+      'important'
+    );
 
-      'margin:0!important',
-      'padding:18px 22px!important',
-      'box-sizing:border-box!important',
+    banner.style.setProperty(
+      'transform',
+      'translateX(-50%)',
+      'important'
+    );
 
-      'background:#ffffff!important',
-      'border:1px solid #e2e2e2!important',
-      'border-radius:10px!important',
-      'box-shadow:0 3px 12px rgba(0,0,0,.18)!important',
+    banner.style.setProperty(
+      'z-index',
+      '99999',
+      'important'
+    );
 
-      'color:#111!important'
-    ].join(';');
+
+    /*
+     * Horizontal layout.
+     */
+    banner.style.setProperty(
+      'display',
+      'flex',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'flex-direction',
+      'row',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'align-items',
+      'center',
+      'important'
+    );
+
+
+    /*
+     * Card sizing.
+     */
+    banner.style.setProperty(
+      'width',
+      'calc(100% - 160px)',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'max-width',
+      '1100px',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'height',
+      '76px',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'box-sizing',
+      'border-box',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'padding',
+      '10px 0',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'margin',
+      '0',
+      'important'
+    );
+
+
+    /*
+     * Visual styling.
+     */
+    banner.style.setProperty(
+      'background',
+      '#ffffff',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'border',
+      '1px solid #e2e2e2',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'border-radius',
+      '10px',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'box-shadow',
+      '0 3px 12px rgba(0,0,0,.18)',
+      'important'
+    );
+
+    banner.style.setProperty(
+      'overflow',
+      'hidden',
+      'important'
+    );
+
+
+    /*
+     * Four benefits.
+     */
 
     banner.appendChild(
-      makeItem('contracts', 'No contracts', 'or commitments', false)
+      makeItem(
+        'No contracts\nor commitments',
+        ICON_CONTRACTS,
+        false
+      )
     );
 
     banner.appendChild(
-      makeItem('calendar', 'Change or cancel', 'anytime', true)
+      makeItem(
+        'Change or cancel\nanytime',
+        ICON_CALENDAR,
+        true
+      )
     );
 
     banner.appendChild(
-      makeItem('tag', 'Same great price', 'every year', true)
+      makeItem(
+        'Same great price\nevery year',
+        ICON_TAG,
+        true
+      )
     );
 
     banner.appendChild(
-      makeItem('thumb', '100% hassle-free', 'online experience', true)
+      makeItem(
+        '100% hassle-free\nonline experience',
+        ICON_THUMB,
+        true
+      )
     );
+
 
     return banner;
   }
 
 
-  function applyMobileStyles(banner) {
-    if (window.innerWidth > 767) return;
-
-    banner.style.cssText = [
-      'position:relative!important',
-      'left:auto!important',
-      'bottom:auto!important',
-      'transform:none!important',
-      'z-index:10!important',
-
-      'display:flex!important',
-      'flex-direction:column!important',
-      'align-items:stretch!important',
-
-      'width:calc(100% - 32px)!important',
-      'max-width:none!important',
-      'min-height:0!important',
-
-      'margin:16px auto!important',
-      'padding:10px 16px!important',
-      'box-sizing:border-box!important',
-
-      'background:#ffffff!important',
-      'border:1px solid #e2e2e2!important',
-      'border-radius:8px!important',
-      'box-shadow:0 3px 12px rgba(0,0,0,.18)!important'
-    ].join(';');
-
-    Array.prototype.forEach.call(
-      banner.children,
-      function (item) {
-        item.style.cssText = [
-          'display:flex!important',
-          'flex-direction:row!important',
-          'align-items:center!important',
-          'flex:none!important',
-          'width:100%!important',
-          'gap:12px!important',
-          'padding:8px 0!important',
-          'box-sizing:border-box!important',
-          'border-left:0!important'
-        ].join(';');
-
-        var spans = item.querySelectorAll('span');
-
-        Array.prototype.forEach.call(
-          spans,
-          function (span) {
-            span.style.whiteSpace = 'normal';
-          }
-        );
-      }
-    );
-  }
-
-
   function injectBanner() {
-    var builder = document.querySelector('pex-pl-hero-builder');
-    if (!builder) return false;
 
-    var hero = builder.querySelector('pex-pl-hero');
-    if (!hero) return false;
+    var builder =
+      document.querySelector('pex-pl-hero-builder');
+
+    if (!builder) {
+      return false;
+    }
+
+
+    var hero =
+      builder.querySelector('pex-pl-hero');
+
+    if (!hero) {
+      return false;
+    }
+
 
     /*
-     * This is critical because the banner is absolutely
-     * positioned relative to the builder.
+     * Anchor our absolute positioning.
      */
-    builder.style.setProperty('position', 'relative', 'important');
-    builder.style.setProperty('display', 'block', 'important');
+    builder.style.setProperty(
+      'position',
+      'relative',
+      'important'
+    );
 
-    var existing = document.getElementById(BANNER_ID);
+    builder.style.setProperty(
+      'display',
+      'block',
+      'important'
+    );
 
-    if (existing) {
+
+    /*
+     * Prevent duplicates.
+     */
+    if (document.getElementById(BANNER_ID)) {
       return true;
     }
 
+
     var banner = buildBanner();
 
-    /*
-     * Keep it outside Spectrum's inner hero component.
-     */
     builder.appendChild(banner);
-
-    applyMobileStyles(banner);
 
     return true;
   }
 
 
   function init() {
+
     injectBanner();
 
+
     /*
-     * Spectrum / Angular can rebuild the hero after Target runs,
-     * so keep checking for 15 seconds.
+     * Spectrum may rebuild the hero during Angular rendering.
+     * Re-check for ~15 seconds.
      */
     var attempts = 0;
+    var MAX_ATTEMPTS = 75;
 
     var interval = setInterval(function () {
+
       attempts++;
 
       injectBanner();
 
-      if (attempts >= 75) {
+      if (attempts >= MAX_ATTEMPTS) {
         clearInterval(interval);
       }
+
     }, 200);
   }
 
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      init
+    );
+
   } else {
+
     init();
+
   }
 
 })();
