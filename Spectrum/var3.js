@@ -1,5 +1,5 @@
 <script id="exp-spectrum-no-contracts-badge" type="html/js">
-    (function () {
+(function () {
   'use strict';
 
   var BADGE_ID = 'exp-spectrum-no-contracts-badge-element';
@@ -98,7 +98,11 @@
     setStyle(section, 'flex-direction', 'column');
     setStyle(section, 'align-items', 'center');
     setStyle(section, 'justify-content', 'center');
+
+    setStyle(section, 'flex', '1 1 0');
     setStyle(section, 'width', '100%');
+    setStyle(section, 'min-height', '0');
+
     setStyle(section, 'margin', '0');
     setStyle(section, 'padding', '0');
     setStyle(section, 'box-sizing', 'border-box');
@@ -109,10 +113,14 @@
     setStyle(iconWrap, 'display', 'flex');
     setStyle(iconWrap, 'align-items', 'center');
     setStyle(iconWrap, 'justify-content', 'center');
+
     setStyle(iconWrap, 'width', '24px');
     setStyle(iconWrap, 'height', '24px');
-    setStyle(iconWrap, 'margin', '0 0 1px 0');
+
+    setStyle(iconWrap, 'margin', '0 auto 2px');
     setStyle(iconWrap, 'padding', '0');
+    setStyle(iconWrap, 'flex', '0 0 auto');
+
 
     iconWrap.appendChild(icon);
 
@@ -126,12 +134,10 @@
     setStyle(text, 'margin', '0');
     setStyle(text, 'padding', '0');
 
-    setStyle(
-      text,
-      'font-family',
-      'Arial, Helvetica, sans-serif'
-    );
-
+    /*
+     * Intentionally NO font-family override.
+     * Spectrum's native font family will inherit.
+     */
     setStyle(text, 'font-size', '10px');
     setStyle(text, 'line-height', '11px');
     setStyle(text, 'font-weight', '700');
@@ -177,7 +183,9 @@
     setStyle(divider, 'width', '72px');
     setStyle(divider, 'height', '1px');
     setStyle(divider, 'min-height', '1px');
-    setStyle(divider, 'margin', '5px 0');
+    setStyle(divider, 'flex', '0 0 1px');
+
+    setStyle(divider, 'margin', '3px 0');
     setStyle(divider, 'padding', '0');
     setStyle(divider, 'background', '#0066ff');
 
@@ -213,7 +221,7 @@
     setStyle(badge, 'box-sizing', 'border-box');
 
     setStyle(badge, 'margin', '0');
-    setStyle(badge, 'padding', '10px');
+    setStyle(badge, 'padding', '10px 12px');
 
     setStyle(badge, 'background', '#ffffff');
 
@@ -233,10 +241,6 @@
 
     setStyle(badge, 'overflow', 'hidden');
 
-    /*
-     * Critical:
-     * badge must NEVER block hero interaction.
-     */
     setStyle(badge, 'pointer-events', 'none');
 
     setStyle(badge, 'visibility', 'visible');
@@ -266,9 +270,19 @@
 
         var iconWrap = section.children[0];
         var text = section.children[1];
+
         var svg = iconWrap
           ? iconWrap.querySelector('svg')
           : null;
+
+
+        /*
+         * Keep icon centered both horizontally and vertically
+         * inside its own fixed-size box.
+         */
+        setStyle(iconWrap, 'display', 'flex');
+        setStyle(iconWrap, 'align-items', 'center');
+        setStyle(iconWrap, 'justify-content', 'center');
 
 
         if (mode === 'mobile') {
@@ -279,6 +293,10 @@
           if (svg) {
             svg.setAttribute('width', '17');
             svg.setAttribute('height', '17');
+
+            setStyle(svg, 'display', 'block');
+            setStyle(svg, 'width', '17px');
+            setStyle(svg, 'height', '17px');
           }
 
           setStyle(text, 'font-size', '7px');
@@ -293,6 +311,10 @@
           if (svg) {
             svg.setAttribute('width', '20');
             svg.setAttribute('height', '20');
+
+            setStyle(svg, 'display', 'block');
+            setStyle(svg, 'width', '20px');
+            setStyle(svg, 'height', '20px');
           }
 
           setStyle(text, 'font-size', '8.5px');
@@ -307,10 +329,15 @@
           if (svg) {
             svg.setAttribute('width', '24');
             svg.setAttribute('height', '24');
+
+            setStyle(svg, 'display', 'block');
+            setStyle(svg, 'width', '24px');
+            setStyle(svg, 'height', '24px');
           }
 
           setStyle(text, 'font-size', '10px');
           setStyle(text, 'line-height', '11px');
+
         }
       }
     );
@@ -318,20 +345,20 @@
 
     if (mode === 'mobile') {
 
-      setStyle(divider, 'width', '50px');
-      setStyle(divider, 'margin', '3px 0');
+      setStyle(divider, 'width', '54px');
+      setStyle(divider, 'margin', '2px 0');
 
 
     } else if (mode === 'tablet') {
 
-      setStyle(divider, 'width', '62px');
-      setStyle(divider, 'margin', '4px 0');
+      setStyle(divider, 'width', '66px');
+      setStyle(divider, 'margin', '3px 0');
 
 
     } else {
 
-      setStyle(divider, 'width', '72px');
-      setStyle(divider, 'margin', '5px 0');
+      setStyle(divider, 'width', '76px');
+      setStyle(divider, 'margin', '3px 0');
 
     }
   }
@@ -339,6 +366,7 @@
 
   /* =========================================================
      DESKTOP
+     1024px+
      ========================================================= */
 
   function applyDesktop(badge, hero) {
@@ -353,8 +381,11 @@
     sizeChildren(badge, 'desktop');
 
 
-    setStyle(badge, 'width', '140px');
-    setStyle(badge, 'height', '140px');
+    /*
+     * 10px larger than original 140px badge.
+     */
+    setStyle(badge, 'width', '150px');
+    setStyle(badge, 'height', '150px');
 
     setStyle(badge, 'top', '22px');
     setStyle(badge, 'right', '24px');
@@ -368,6 +399,7 @@
 
   /* =========================================================
      TABLET
+     768px - 1023px
      ========================================================= */
 
   function applyTablet(badge, hero) {
@@ -382,8 +414,11 @@
     sizeChildren(badge, 'tablet');
 
 
-    setStyle(badge, 'width', '116px');
-    setStyle(badge, 'height', '116px');
+    /*
+     * 10px larger than original 116px badge.
+     */
+    setStyle(badge, 'width', '126px');
+    setStyle(badge, 'height', '126px');
 
     setStyle(badge, 'top', '18px');
     setStyle(badge, 'right', '18px');
@@ -397,14 +432,17 @@
 
   /* =========================================================
      MOBILE
+     <= 767px
      ========================================================= */
 
   function applyMobile(badge, hero) {
     var heroImage =
       hero.querySelector('pex-pl-hero-image');
 
+
     /*
-     * Use the actual image wrapper as positioning context.
+     * Attach directly to the mobile hero image so the badge
+     * stays locked to the image when Spectrum stacks the hero.
      */
     if (heroImage) {
 
@@ -434,13 +472,12 @@
 
 
     /*
-     * Matches the mobile comp:
-     * small circle tucked into upper-right of photo.
+     * 10px larger than original 88px badge.
      */
-    setStyle(badge, 'width', '88px');
-    setStyle(badge, 'height', '88px');
+    setStyle(badge, 'width', '98px');
+    setStyle(badge, 'height', '98px');
 
-    setStyle(badge, 'padding', '7px');
+    setStyle(badge, 'padding', '7px 9px');
 
     setStyle(badge, 'top', '10px');
     setStyle(badge, 'right', '10px');
@@ -525,7 +562,7 @@
 
 
     /*
-     * Spectrum Angular re-render protection
+     * Spectrum Angular re-render protection.
      */
     var attempts = 0;
     var MAX_ATTEMPTS = 75;
@@ -546,7 +583,7 @@
 
 
     /*
-     * Responsive changes
+     * Re-apply appropriate positioning when viewport changes.
      */
     var resizeTimer;
 
