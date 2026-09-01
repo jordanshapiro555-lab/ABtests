@@ -12,133 +12,193 @@
     style.id = STYLE_ID;
 
     style.textContent = `
-      /* Banner */
-      .${BANNER_CLASS} {
-        display: flex;
-        align-items: stretch;
 
-        width: calc(100% - 48px);
-        max-width: 1100px;
-
-        margin: 20px auto 0;
-        padding: 18px 20px;
-
-        box-sizing: border-box;
-
-        background: #ffffff;
-        border: 1px solid #e5e5e5;
-        border-radius: 10px;
-
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+      /* Position relative to the OUTER hero builder */
+      pex-pl-hero-builder {
+        position: relative !important;
+        display: block !important;
       }
+
+      /* =========================
+         DESKTOP
+         ========================= */
+
+      pex-pl-hero-builder > .${BANNER_CLASS} {
+        position: absolute !important;
+
+        left: 50% !important;
+        bottom: 18px !important;
+        transform: translateX(-50%) !important;
+
+        z-index: 100 !important;
+
+        display: flex !important;
+        align-items: center !important;
+
+        width: calc(100% - 160px) !important;
+        max-width: 1100px !important;
+
+        box-sizing: border-box !important;
+
+        padding: 18px 22px !important;
+
+        background: #ffffff !important;
+        border: 1px solid #e2e2e2 !important;
+        border-radius: 10px !important;
+
+        box-shadow: 0 3px 12px rgba(0,0,0,.18) !important;
+
+        color: #000 !important;
+      }
+
 
       .${BANNER_CLASS}__item {
-        display: flex;
-        align-items: center;
-        gap: 14px;
+        flex: 1 1 25% !important;
 
-        flex: 1 1 25%;
-        min-width: 0;
+        display: flex !important;
+        align-items: center !important;
 
-        padding: 0 24px;
-        box-sizing: border-box;
+        min-width: 0 !important;
+
+        gap: 16px !important;
+
+        padding: 0 28px !important;
+
+        box-sizing: border-box !important;
       }
 
+
       .${BANNER_CLASS}__item:first-child {
-        padding-left: 8px;
+        padding-left: 0 !important;
       }
 
       .${BANNER_CLASS}__item:last-child {
-        padding-right: 8px;
+        padding-right: 0 !important;
       }
+
 
       .${BANNER_CLASS}__item + .${BANNER_CLASS}__item {
-        border-left: 1px solid #e5e5e5;
+        border-left: 1px solid #dedede !important;
       }
+
 
       .${BANNER_CLASS}__icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        flex: 0 0 36px !important;
 
-        width: 38px;
-        min-width: 38px;
-        height: 38px;
+        width: 36px !important;
+        height: 36px !important;
 
-        color: #001bde;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+
+        color: #0037ff !important;
       }
+
 
       .${BANNER_CLASS}__icon svg {
-        display: block;
-        width: 34px;
-        height: 34px;
+        display: block !important;
 
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
+        width: 34px !important;
+        height: 34px !important;
+
+        fill: none !important;
+        stroke: currentColor !important;
+        stroke-width: 1.8 !important;
+        stroke-linecap: round !important;
+        stroke-linejoin: round !important;
       }
+
 
       .${BANNER_CLASS}__copy {
-        font-family: inherit;
-        font-size: 14px;
-        line-height: 1.35;
-        font-weight: 500;
-        color: #111111;
+        display: block !important;
+
+        min-width: 0 !important;
+
+        font-family: inherit !important;
+        font-size: 14px !important;
+        line-height: 1.35 !important;
+        font-weight: 500 !important;
+
+        color: #111 !important;
       }
 
-      /*
-       * MOBILE
-       */
+
+      .${BANNER_CLASS}__line {
+        display: block !important;
+        white-space: nowrap !important;
+      }
+
+
+
+      /* =========================
+         MOBILE
+         ========================= */
+
       @media (max-width: 767px) {
-        .${BANNER_CLASS} {
-          display: flex;
-          flex-direction: column;
 
-          width: calc(100% - 32px);
-          max-width: none;
+        pex-pl-hero-builder > .${BANNER_CLASS} {
+          position: relative !important;
 
-          margin: 16px auto 0;
-          padding: 14px 16px;
+          left: auto !important;
+          bottom: auto !important;
+          transform: none !important;
 
-          border-radius: 8px;
+          z-index: 1 !important;
+
+          flex-direction: column !important;
+          align-items: stretch !important;
+
+          width: calc(100% - 32px) !important;
+          max-width: none !important;
+
+          margin: 16px auto !important;
+
+          padding: 10px 16px !important;
         }
+
 
         .${BANNER_CLASS}__item {
-          width: 100%;
-          flex: none;
+          flex: none !important;
 
-          padding: 8px 0;
-          gap: 12px;
+          width: 100% !important;
+
+          padding: 8px 0 !important;
+
+          gap: 12px !important;
         }
 
-        .${BANNER_CLASS}__item:first-child,
-        .${BANNER_CLASS}__item:last-child {
-          padding-left: 0;
-          padding-right: 0;
-        }
 
         .${BANNER_CLASS}__item + .${BANNER_CLASS}__item {
-          border-left: 0;
+          border-left: 0 !important;
         }
+
 
         .${BANNER_CLASS}__icon {
-          width: 30px;
-          min-width: 30px;
-          height: 30px;
+          flex-basis: 28px !important;
+
+          width: 28px !important;
+          height: 28px !important;
         }
+
 
         .${BANNER_CLASS}__icon svg {
-          width: 27px;
-          height: 27px;
+          width: 26px !important;
+          height: 26px !important;
         }
 
+
         .${BANNER_CLASS}__copy {
-          font-size: 12px;
-          line-height: 1.3;
+          font-size: 12px !important;
+          line-height: 1.3 !important;
+        }
+
+
+        .${BANNER_CLASS}__line {
+          white-space: normal !important;
         }
       }
+
     `;
 
     document.head.appendChild(style);
@@ -152,86 +212,137 @@
 
     banner.innerHTML = `
 
-      <!-- 1. No contracts -->
+      <!-- NO CONTRACTS -->
+
       <div class="${BANNER_CLASS}__item">
+
         <div class="${BANNER_CLASS}__icon" aria-hidden="true">
+
           <svg viewBox="0 0 40 40">
+
             <path d="M12 7.5a14 14 0 1 0 17.5 3"></path>
+
             <path d="M12 3.5v8h8"></path>
+
             <text
               x="20"
               y="24"
               text-anchor="middle"
               fill="currentColor"
               stroke="none"
-              font-size="11"
+              font-size="10"
               font-family="Arial, sans-serif"
-              font-weight="700">$0</text>
+              font-weight="700"
+            >$0</text>
+
           </svg>
+
         </div>
 
         <div class="${BANNER_CLASS}__copy">
-          No contracts<br>
-          or commitments
+          <span class="${BANNER_CLASS}__line">No contracts</span>
+          <span class="${BANNER_CLASS}__line">or commitments</span>
         </div>
+
       </div>
 
 
-      <!-- 2. Change or cancel -->
+
+      <!-- CHANGE OR CANCEL -->
+
       <div class="${BANNER_CLASS}__item">
+
         <div class="${BANNER_CLASS}__icon" aria-hidden="true">
+
           <svg viewBox="0 0 40 40">
+
             <rect x="7" y="10" width="26" height="24" rx="1"></rect>
+
             <path d="M7 16h26"></path>
             <path d="M13 6v8"></path>
             <path d="M27 6v8"></path>
+
             <path d="M13 21h3"></path>
             <path d="M19 21h3"></path>
             <path d="M25 21h3"></path>
+
             <path d="M13 27h3"></path>
             <path d="M19 27h3"></path>
             <path d="M25 27h3"></path>
+
           </svg>
+
         </div>
 
         <div class="${BANNER_CLASS}__copy">
-          Change or cancel<br>
-          anytime
+          <span class="${BANNER_CLASS}__line">Change or cancel</span>
+          <span class="${BANNER_CLASS}__line">anytime</span>
         </div>
+
       </div>
 
 
-      <!-- 3. Same great price -->
+
+      <!-- SAME GREAT PRICE -->
+
       <div class="${BANNER_CLASS}__item">
+
         <div class="${BANNER_CLASS}__icon" aria-hidden="true">
+
           <svg viewBox="0 0 40 40">
+
             <path d="M7 20L20 7h12v12L19 32 7 20z"></path>
+
             <circle cx="26.5" cy="12.5" r="2"></circle>
+
             <path d="M15 19h8"></path>
             <path d="M19 15v8"></path>
+
           </svg>
+
         </div>
 
         <div class="${BANNER_CLASS}__copy">
-          Same great price<br>
-          every year
+          <span class="${BANNER_CLASS}__line">Same great price</span>
+          <span class="${BANNER_CLASS}__line">every year</span>
         </div>
+
       </div>
 
 
-      <!-- 4. Hassle-free -->
+
+      <!-- HASSLE FREE -->
+
       <div class="${BANNER_CLASS}__item">
+
         <div class="${BANNER_CLASS}__icon" aria-hidden="true">
+
           <svg viewBox="0 0 40 40">
+
             <path d="M13 18v16H7V18h6z"></path>
-            <path d="M13 31h15c2 0 3.5-1 4.2-2.7l3.3-8.2c.8-2-.7-4.1-2.9-4.1H25l1-6c.3-2-1.2-4-3.3-4H21l-8 12"></path>
+
+            <path d="
+              M13 31
+              h15
+              c2 0 3.5-1 4.2-2.7
+              l3.3-8.2
+              c.8-2-.7-4.1-2.9-4.1
+              H25
+              l1-6
+              c.3-2-1.2-4-3.3-4
+              H21
+              l-8 12
+            "></path>
+
           </svg>
+
         </div>
 
         <div class="${BANNER_CLASS}__copy">
-          100% hassle-free<br>
-          online experience
+          <span class="${BANNER_CLASS}__line">100% hassle-free</span>
+          <span class="${BANNER_CLASS}__line">online experience</span>
         </div>
+
       </div>
 
     `;
@@ -241,71 +352,131 @@
 
 
   function injectBanner() {
+
     /*
-     * Scope specifically to the SEM Internet hero.
+     * IMPORTANT:
+     * Target the builder, NOT the inner Angular hero.
      */
-    var hero = document.querySelector(
-      'pex-pl-hero-builder pex-pl-hero'
+    var builder = document.querySelector(
+      'pex-pl-hero-builder'
     );
 
-    if (!hero) return false;
-
-
-    /*
-     * Never inject twice.
-     */
-    if (hero.querySelector('.' + BANNER_CLASS)) {
-      return true;
+    if (!builder) {
+      return false;
     }
 
 
     /*
-     * The banner should sit below the existing hero copy / CTAs
-     * while remaining inside the hero.
+     * Make sure the actual hero exists first.
      */
-    var content = hero.querySelector('pex-pl-hero-content');
+    var hero = builder.querySelector(
+      ':scope > pex-pl-hero'
+    );
 
-    if (!content) return false;
+    if (!hero) {
+      hero = builder.querySelector('pex-pl-hero');
+    }
+
+    if (!hero) {
+      return false;
+    }
+
+
+    /*
+     * Don't inject twice.
+     */
+    if (builder.querySelector(
+      ':scope > .' + BANNER_CLASS
+    )) {
+      return true;
+    }
 
 
     var banner = buildBanner();
 
-    content.appendChild(banner);
+
+    /*
+     * Insert AFTER pex-pl-hero.
+
+     * This is the important difference:
+     *
+     * <pex-pl-hero-builder>
+     *
+     *     <pex-pl-hero>
+     *         Angular-controlled content
+     *     </pex-pl-hero>
+     *
+     *     OUR BANNER
+     *
+     * </pex-pl-hero-builder>
+     *
+     * This keeps Angular from deleting our element.
+     */
+    if (hero.nextSibling) {
+
+      builder.insertBefore(
+        banner,
+        hero.nextSibling
+      );
+
+    } else {
+
+      builder.appendChild(banner);
+
+    }
+
 
     return true;
   }
 
 
   function init() {
+
     addStyles();
+
 
     /*
      * Try immediately.
      */
-    if (injectBanner()) return;
+    injectBanner();
 
 
     /*
-     * Spectrum renders through Angular, so wait for the hero
-     * if it is not available when Target first executes.
+     * Spectrum renders asynchronously.
+     *
+     * Continue checking instead of stopping after
+     * the first successful attempt because Angular
+     * can replace the hero shortly after Target runs.
      */
     var attempts = 0;
-    var maxAttempts = 50;
+    var MAX_ATTEMPTS = 75;
 
     var interval = setInterval(function () {
+
       attempts++;
 
-      if (injectBanner() || attempts >= maxAttempts) {
+      injectBanner();
+
+      if (attempts >= MAX_ATTEMPTS) {
         clearInterval(interval);
       }
+
     }, 200);
+
   }
 
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      init
+    );
+
   } else {
+
     init();
+
   }
 
 })();
