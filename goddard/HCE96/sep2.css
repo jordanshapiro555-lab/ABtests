@@ -1,0 +1,158 @@
+<style type="text/css">
+    /* ==========================================================
+   GSI Locator Card — Experiment (Scanability)
+   ========================================================== */
+    .gsi-school-locator__results-item.gsi-exp-card {
+        position: relative !important;
+        box-sizing: border-box !important;
+        padding: 20px !important;
+        border: 1px solid #D4DCE6 !important;
+        box-shadow: 0 1px 3px rgba(0, 40, 86, 0.08) !important;
+        list-style: none !important;
+        color: #002856 !important;
+    }
+
+    /* Website icon pinned to the top-right corner */
+    .gsi-exp-card .gsi-exp-card__website {
+        position: absolute !important;
+        right: 16px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        margin: 0 !important;
+        z-index: 1 !important;
+    }
+
+    .gsi-exp-card .gsi-exp-card__website img {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    .gsi-exp-card .gsi-school-locator__results-item-link-label {
+        font-size: 12px !important;
+        color: #002856 !important;
+        margin-top: 2px !important;
+    }
+
+    .gsi-exp-card__top {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding-right: 64px !important;
+        padding-bottom: 10px !important;
+        /* room for corner website icon */
+    }
+
+    /* reviews row also clears the corner icon */
+    .gsi-exp-card .gsi-google-reviews {
+        padding-right: 64px !important;
+    }
+
+    .gsi-exp-card__badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        width: 26px !important;
+        height: 26px !important;
+        border-radius: 50% !important;
+        background: #002856 !important;
+        color: #FFFFFF !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+    }
+
+    .gsi-exp-card__name {
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        color: #002856 !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+    }
+
+    .gsi-exp-card__coming-soon {
+        margin: 8px 0 0 0 !important;
+        color: #C8102E !important;
+        font-weight: 800 !important;
+        font-size: 14px !important;
+        padding-right: 64px !important;
+    }
+
+    .gsi-exp-card__meta {
+        margin: 10px 0 0 0 !important;
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+        color: #002856 !important;
+    }
+
+    .gsi-exp-card__distance {
+        font-weight: 800 !important;
+    }
+
+    .gsi-exp-card__address {
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+        color: #002856 !important;
+    }
+
+    .gsi-exp-card__hours {
+        margin: 4px 0 0 0 !important;
+    }
+
+    .gsi-exp-card__phone-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        margin: 4px 0 0 0 !important;
+        color: #1A6DCC !important;
+        text-decoration: underline !important;
+        font-size: 14px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .gsi-exp-card__phone-icon {
+        display: inline-block !important;
+        width: 14px !important;
+        height: 14px !important;
+        margin-right: 6px !important;
+        vertical-align: -2px !important;
+    }
+
+    .gsi-exp-card__actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin: 16px 0 0 0 !important;
+    }
+
+    .gsi-exp-card__btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        height: 44px !important;
+        padding: 0 22px !important;
+        border-radius: 24px !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+    }
+
+    .gsi-exp-card__btn--primary {
+        background: #A7E1D5 !important;
+        color: #002856 !important;
+        border: 1px solid #A7E1D5 !important;
+    }
+
+    .gsi-exp-card__btn--phone {
+        background: transparent !important;
+        color: #002856 !important;
+        border: 1px solid #A7E1D5 !important;
+        gap: 8px !important;
+    }
+
+    .gsi-school-locator__popup {
+        font-size: .75rem !important;
+    }
+</style>
